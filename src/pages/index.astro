@@ -1,0 +1,1227 @@
+
+---
+const categories = [
+  "News",
+  "Politics",
+  "Entertainment",
+  "Celebrity",
+  "Trending",
+  "Sports",
+  "Business",
+  "Lifestyle",
+  "Technology",
+];
+
+const stories = [
+  {
+    category: "NIGERIA",
+    title: "The latest stories shaping Nigeria today",
+    summary:
+      "Stay informed on the developments, people and decisions making headlines across the country.",
+    image:
+      "https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=85",
+    slug: "latest-stories-shaping-nigeria",
+  },
+  {
+    category: "ENTERTAINMENT",
+    title: "Inside Nigeria's evolving entertainment scene",
+    summary:
+      "The people, releases and conversations drawing attention across music, film and pop culture.",
+    image:
+      "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=800&q=85",
+    slug: "nigerian-entertainment-scene",
+  },
+  {
+    category: "BUSINESS",
+    title: "Business and technology stories to follow",
+    summary:
+      "A closer look at ideas, industries and developments shaping everyday life.",
+    image:
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=85",
+    slug: "business-and-technology",
+  },
+];
+
+const currentDate = new Date().toLocaleDateString("en-NG", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>PTO Info Daily | Nigerian News, Entertainment and More</title>
+    <meta
+      name="description"
+      content="PTO Info Daily covers Nigerian news, politics, entertainment, celebrity stories, business, sports, lifestyle and technology."
+    />
+    <meta name="theme-color" content="#102a56" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://ptoinfodaily.com/" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PTO Info Daily" />
+    <meta property="og:title" content="PTO Info Daily | Nigerian News and Stories" />
+    <meta
+      property="og:description"
+      content="News, entertainment, business, sports and the stories people are talking about."
+    />
+    <meta property="og:url" content="https://ptoinfodaily.com/" />
+    <meta property="og:image" content="https://ptoinfodaily.com/pto-logo.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PTO Info Daily" />
+    <meta
+      name="twitter:description"
+      content="News, entertainment, business and the stories shaping Nigeria."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="utility-bar">
+      <div class="container utility-inner">
+        <span>{currentDate}</span>
+        <span class="utility-note">Real stories. Nigeria. Daily.</span>
+      </div>
+    </div>
+
+    <header class="site-header">
+      <div class="container masthead">
+        <a href="/" class="brand" aria-label="PTO Info Daily homepage">
+          <img src="/pto-logo.png" alt="PTO Info Daily" width="240" height="80" />
+        </a>
+
+        <div class="masthead-right">
+          <span class="masthead-tagline">
+            Independent stories.<br />Relevant perspectives.
+          </span>
+          <a href="#latest" class="latest-link">
+            Explore the latest <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <div class="container nav-inner">
+          <a href="/" class="nav-home" aria-current="page">Home</a>
+
+          <div class="nav-links" id="primary-navigation">
+            {categories.map((category) => (
+              <a href={`/category/${category.toLowerCase().replaceAll(" ", "-")}/`}>
+                {category}
+              </a>
+            ))}
+          </div>
+
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="primary-navigation"
+            aria-label="Open navigation"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="container lead-section" aria-labelledby="daily-brief">
+        <div class="section-heading">
+          <span class="section-marker" aria-hidden="true"></span>
+          <h2 id="daily-brief">THE DAILY BRIEF</h2>
+          <span class="section-rule" aria-hidden="true"></span>
+          <span class="section-date">News that matters</span>
+        </div>
+
+        <div class="lead-grid">
+          <article class="lead-story">
+            <a href={`/article/${stories[0].slug}/`} class="story-image lead-image">
+              <img
+                src={stories[0].image}
+                alt="Illustrative image for a Nigerian news feature"
+                fetchpriority="high"
+                width="1200"
+                height="700"
+              />
+              <span class="image-label">TOP STORY</span>
+            </a>
+
+            <div class="lead-copy">
+              <span class="category-label">{stories[0].category}</span>
+              <h1>
+                <a href={`/article/${stories[0].slug}/`}>{stories[0].title}</a>
+              </h1>
+              <p>{stories[0].summary}</p>
+              <span class="story-meta">PTO INFO DAILY <span>·</span> TOP HEADLINES</span>
+            </div>
+          </article>
+
+          <aside class="side-stories" aria-labelledby="also-making-news">
+            <div class="side-heading">
+              <h2 id="also-making-news">ALSO MAKING NEWS</h2>
+              <span class="side-count">02 STORIES</span>
+            </div>
+
+            {stories.slice(1).map((story) => (
+              <article class="side-story">
+                <a href={`/article/${story.slug}/`} class="story-image side-image">
+                  <img
+                    src={story.image}
+                    alt=""
+                    loading="lazy"
+                    width="400"
+                    height="300"
+                  />
+                </a>
+                <div class="side-copy">
+                  <span class="category-label">{story.category}</span>
+                  <h3><a href={`/article/${story.slug}/`}>{story.title}</a></h3>
+                  <p>{story.summary}</p>
+                </div>
+              </article>
+            ))}
+          </aside>
+        </div>
+      </section>
+
+      <section class="trending-section" aria-labelledby="trending-title">
+        <div class="container">
+          <div class="trending-heading">
+            <span class="trending-icon" aria-hidden="true">↗</span>
+            <h2 id="trending-title">WHAT'S TRENDING</h2>
+            <span class="trending-caption">Explore popular topics</span>
+          </div>
+
+          <div class="trending-topics">
+            <a href="/category/trending/">Trending stories <span>01</span></a>
+            <a href="/category/entertainment/">Entertainment <span>02</span></a>
+            <a href="/category/politics/">Politics <span>03</span></a>
+            <a href="/category/business/">Business <span>04</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="container latest-section" id="latest" aria-labelledby="latest-title">
+        <div class="section-heading">
+          <span class="section-marker" aria-hidden="true"></span>
+          <h2 id="latest-title">THE LATEST</h2>
+          <span class="section-rule" aria-hidden="true"></span>
+          <a class="section-more" href="/latest/">ALL STORIES ↗</a>
+        </div>
+
+        <div class="latest-grid">
+          {stories.map((story) => (
+            <article class="latest-card">
+              <a href={`/article/${story.slug}/`} class="story-image latest-image">
+                <img
+                  src={story.image}
+                  alt=""
+                  loading="lazy"
+                  width="800"
+                  height="500"
+                />
+              </a>
+              <div class="latest-card-copy">
+                <span class="category-label">{story.category}</span>
+                <h3><a href={`/article/${story.slug}/`}>{story.title}</a></h3>
+                <p>{story.summary}</p>
+                <span class="story-meta">PTO INFO DAILY</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="container category-feature" aria-labelledby="explore-title">
+        <div class="category-feature-copy">
+          <span class="category-label">BEYOND THE HEADLINES</span>
+          <h2 id="explore-title">More than just the news.</h2>
+          <p>
+            From public affairs and business to culture, sport and technology,
+            explore the stories shaping how we live.
+          </p>
+        </div>
+
+        <div class="category-feature-links">
+          <a href="/category/politics/">Politics <span>↗</span></a>
+          <a href="/category/sports/">Sports <span>↗</span></a>
+          <a href="/category/lifestyle/">Lifestyle <span>↗</span></a>
+          <a href="/category/technology/">Technology <span>↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-main">
+        <div class="footer-brand">
+          <a href="/" class="brand footer-logo" aria-label="PTO Info Daily homepage">
+            <img src="/pto-logo.png" alt="PTO Info Daily" width="200" height="66" loading="lazy" />
+          </a>
+          <p>Real stories. Nigeria. Daily.</p>
+          <p class="footer-description">
+            News, perspectives and conversations from Nigeria and beyond.
+          </p>
+        </div>
+
+        <div class="footer-column">
+          <h2>EXPLORE</h2>
+          <a href="/category/news/">News</a>
+          <a href="/category/entertainment/">Entertainment</a>
+          <a href="/category/business/">Business</a>
+          <a href="/category/sports/">Sports</a>
+        </div>
+
+        <div class="footer-column">
+          <h2>ABOUT PTO</h2>
+          <a href="/about/">About Us</a>
+          <a href="/contact/">Contact</a>
+          <a href="/advertise/">Advertise With Us</a>
+          <a href="/editorial-policy/">Editorial Policy</a>
+        </div>
+
+        <div class="footer-column">
+          <h2>OUR STANDARDS</h2>
+          <a href="/corrections-policy/">Corrections Policy</a>
+          <a href="/privacy/">Privacy Policy</a>
+          <a href="/terms/">Terms of Use</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="container footer-bottom-inner">
+          <span>© {new Date().getFullYear()} PTO Info Daily. All rights reserved.</span>
+          <span>Independent thinking. Informed readers.</span>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const menuButton = document.querySelector<HTMLButtonElement>(".menu-toggle");
+      const navLinks = document.querySelector<HTMLElement>("#primary-navigation");
+
+      menuButton?.addEventListener("click", () => {
+        const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+
+        menuButton.setAttribute("aria-expanded", String(!isOpen));
+        menuButton.setAttribute(
+          "aria-label",
+          isOpen ? "Open navigation" : "Close navigation"
+        );
+        navLinks?.classList.toggle("nav-open", !isOpen);
+      });
+    </script>
+
+    <style>
+      :global(*) {
+        box-sizing: border-box;
+      }
+
+      :global(html) {
+        scroll-behavior: smooth;
+        scroll-padding-top: 20px;
+      }
+
+      :global(body) {
+        margin: 0;
+        background: #fff;
+        color: #172033;
+        font-family: "Inter", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      :global(a) {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      :global(img) {
+        display: block;
+        max-width: 100%;
+      }
+
+      :global(button),
+      :global(a) {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :global(a:focus-visible),
+      :global(button:focus-visible) {
+        outline: 3px solid #38bdf8;
+        outline-offset: 3px;
+      }
+
+      .container {
+        width: min(1200px, calc(100% - 48px));
+        margin-inline: auto;
+      }
+
+      .utility-bar {
+        background: #102a56;
+        color: #eaf2ff;
+        font-size: 11px;
+        letter-spacing: .035em;
+      }
+
+      .utility-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 34px;
+        gap: 16px;
+      }
+
+      .utility-note {
+        color: #c3d7ff;
+      }
+
+      .site-header {
+        background: #fff;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 112px;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        min-width: 0;
+      }
+
+      .brand img {
+        display: block;
+        width: auto;
+        height: 66px;
+        max-width: min(360px, 45vw);
+        object-fit: contain;
+        object-position: left center;
+      }
+
+      .masthead-right {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+      }
+
+      .masthead-tagline {
+        font-size: 11px;
+        line-height: 1.7;
+        color: #667085;
+      }
+
+      .latest-link {
+        display: inline-flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 15px;
+        border: 1px solid #dce4f0;
+        font-size: 12px;
+        font-weight: 700;
+        color: #102a56;
+        transition: border-color .2s ease, color .2s ease;
+      }
+
+      .latest-link:hover {
+        border-color: #155eef;
+        color: #155eef;
+      }
+
+      .latest-link span {
+        color: #155eef;
+        font-size: 17px;
+      }
+
+      .main-nav {
+        background: #155eef;
+        color: white;
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: stretch;
+        min-height: 48px;
+      }
+
+      .nav-home {
+        display: flex;
+        align-items: center;
+        padding: 0 19px;
+        margin-right: 10px;
+        background: #102a56;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        flex: 1;
+      }
+
+      .nav-links a {
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: background .18s ease;
+      }
+
+      .nav-links a:hover {
+        background: #104acb;
+      }
+
+      .menu-toggle {
+        display: none;
+        border: 0;
+        background: transparent;
+        color: white;
+        padding: 12px;
+        cursor: pointer;
+      }
+
+      .menu-toggle span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        margin: 4px 0;
+        background: white;
+      }
+
+      .lead-section {
+        padding-top: 39px;
+        padding-bottom: 38px;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+
+      .section-marker {
+        display: block;
+        width: 4px;
+        height: 21px;
+        flex-shrink: 0;
+        background: #155eef;
+      }
+
+      .section-heading h2,
+      .side-heading h2,
+      .trending-heading h2 {
+        margin: 0;
+        font-family: "Montserrat", sans-serif;
+        font-size: 13px;
+        letter-spacing: .055em;
+        font-weight: 800;
+        color: #102a56;
+      }
+
+      .section-rule {
+        flex: 1;
+        height: 1px;
+        background: #e3e8f0;
+      }
+
+      .section-date {
+        color: #7a8495;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .lead-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.65fr) minmax(290px, 1fr);
+        gap: 30px;
+      }
+
+      .lead-story {
+        min-width: 0;
+      }
+
+      .story-image {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        background: #eaf2ff;
+      }
+
+      .story-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .35s ease;
+      }
+
+      .story-image:hover img {
+        transform: scale(1.025);
+      }
+
+      .lead-image {
+        height: 355px;
+      }
+
+      .image-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background: #155eef;
+        color: white;
+        padding: 10px 15px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
+      }
+
+      .lead-copy {
+        padding-top: 20px;
+      }
+
+      .category-label {
+        display: inline-block;
+        color: #155eef;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
+      }
+
+      .lead-copy h1 {
+        margin: 10px 0;
+        max-width: 700px;
+        color: #102a56;
+        font-family: "Montserrat", sans-serif;
+        font-size: clamp(27px, 3vw, 39px);
+        line-height: 1.17;
+        letter-spacing: -.045em;
+        font-weight: 800;
+      }
+
+      .lead-copy h1 a:hover,
+      .side-copy h3 a:hover,
+      .latest-card-copy h3 a:hover {
+        color: #155eef;
+      }
+
+      .lead-copy p,
+      .side-copy p,
+      .latest-card-copy p {
+        color: #697386;
+        font-size: 13px;
+        line-height: 1.75;
+      }
+
+      .lead-copy p {
+        max-width: 650px;
+        margin: 0 0 16px;
+      }
+
+      .story-meta {
+        color: #8a94a5;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: .075em;
+      }
+
+      .story-meta span {
+        padding-inline: 6px;
+        color: #155eef;
+      }
+
+      .side-stories {
+        border-top: 2px solid #102a56;
+      }
+
+      .side-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #e3e8f0;
+      }
+
+      .side-heading h2 {
+        font-size: 11px;
+      }
+
+      .side-count {
+        color: #929bad;
+        font-size: 9px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .side-story {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        gap: 15px;
+        padding: 18px 0;
+        border-bottom: 1px solid #e3e8f0;
+      }
+
+      .side-image {
+        height: 100px;
+      }
+
+      .side-copy {
+        min-width: 0;
+      }
+
+      .side-copy h3 {
+        margin: 7px 0;
+        font-family: "Montserrat", sans-serif;
+        color: #102a56;
+        font-size: 15px;
+        line-height: 1.4;
+        letter-spacing: -.025em;
+      }
+
+      .side-copy p {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .trending-section {
+        background: #f3f6fb;
+        border-block: 1px solid #e5ebf5;
+        padding: 24px 0;
+      }
+
+      .trending-heading {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 18px;
+      }
+
+      .trending-icon {
+        display: grid;
+        place-items: center;
+        width: 27px;
+        height: 27px;
+        flex-shrink: 0;
+        background: #155eef;
+        color: white;
+        font-size: 17px;
+      }
+
+      .trending-heading h2 {
+        font-size: 12px;
+      }
+
+      .trending-caption {
+        margin-left: auto;
+        color: #788398;
+        font-size: 11px;
+      }
+
+      .trending-topics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .trending-topics a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 15px;
+        background: white;
+        border: 1px solid #e1e8f3;
+        color: #102a56;
+        font-size: 12px;
+        font-weight: 700;
+        transition: border-color .2s ease;
+      }
+
+      .trending-topics a:hover {
+        border-color: #155eef;
+      }
+
+      .trending-topics a span {
+        color: #155eef;
+        font-size: 10px;
+      }
+
+      .latest-section {
+        padding-top: 43px;
+        padding-bottom: 44px;
+      }
+
+      .section-more {
+        color: #155eef;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        white-space: nowrap;
+      }
+
+      .latest-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .latest-card {
+        min-width: 0;
+      }
+
+      .latest-image {
+        height: 205px;
+        margin-bottom: 16px;
+      }
+
+      .latest-card-copy h3 {
+        margin: 8px 0;
+        font-family: "Montserrat", sans-serif;
+        color: #102a56;
+        font-size: 18px;
+        line-height: 1.4;
+        letter-spacing: -.025em;
+      }
+
+      .latest-card-copy p {
+        margin: 0 0 15px;
+        font-size: 12px;
+      }
+
+      .category-feature {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 50px;
+        align-items: center;
+        margin-bottom: 50px;
+        padding: 35px;
+        background: #102a56;
+        color: white;
+      }
+
+      .category-feature-copy .category-label {
+        color: #8eb6ff;
+      }
+
+      .category-feature-copy h2 {
+        margin: 12px 0;
+        font-family: "Montserrat", sans-serif;
+        font-size: clamp(24px, 3vw, 34px);
+        letter-spacing: -.04em;
+      }
+
+      .category-feature-copy p {
+        max-width: 470px;
+        color: #d0d9e9;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .category-feature-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 25px;
+      }
+
+      .category-feature-links a {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 0;
+        border-bottom: 1px solid #344a6d;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .category-feature-links a span {
+        color: #8eb6ff;
+      }
+
+      .site-footer {
+        background: #f7f9fc;
+        border-top: 1px solid #e5eaf2;
+      }
+
+      .footer-main {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr 1fr 1fr;
+        gap: 36px;
+        padding-top: 42px;
+        padding-bottom: 40px;
+      }
+
+      .footer-logo img {
+        height: 48px;
+        max-width: 250px;
+      }
+
+      .footer-brand > p {
+        color: #536079;
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .footer-brand .footer-description {
+        max-width: 280px;
+        color: #7b8596;
+      }
+
+      .footer-column {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 13px;
+      }
+
+      .footer-column h2 {
+        margin: 4px 0 6px;
+        color: #102a56;
+        font-size: 10px;
+        letter-spacing: .08em;
+      }
+
+      .footer-column a {
+        color: #667085;
+        font-size: 12px;
+      }
+
+      .footer-column a:hover {
+        color: #155eef;
+      }
+
+      .footer-bottom {
+        border-top: 1px solid #e3e8f0;
+      }
+
+      .footer-bottom-inner {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding-top: 17px;
+        padding-bottom: 17px;
+        color: #7b8596;
+        font-size: 10px;
+      }
+
+      @media (max-width: 1050px) {
+        .nav-links a {
+          padding-inline: 8px;
+          font-size: 10px;
+        }
+
+        .lead-grid {
+          grid-template-columns: minmax(0, 1.4fr) minmax(270px, 1fr);
+          gap: 23px;
+        }
+
+        .side-story {
+          grid-template-columns: 90px minmax(0, 1fr);
+          gap: 12px;
+        }
+
+        .side-image {
+          height: 88px;
+        }
+
+        .brand img {
+          height: 58px;
+        }
+      }
+
+      @media (max-width: 800px) {
+        .container {
+          width: min(calc(100% - 32px), 620px);
+        }
+
+        .masthead {
+          min-height: 91px;
+        }
+
+        .brand img {
+          height: 52px;
+          max-width: min(300px, 48vw);
+        }
+
+        .masthead-tagline {
+          display: none;
+        }
+
+        .latest-link {
+          padding: 10px;
+          font-size: 10px;
+        }
+
+        .nav-inner {
+          position: relative;
+          justify-content: space-between;
+          min-height: 45px;
+        }
+
+        .nav-home {
+          padding-inline: 14px;
+        }
+
+        .menu-toggle {
+          display: block;
+        }
+
+        .nav-links {
+          display: none;
+          position: absolute;
+          z-index: 10;
+          top: 45px;
+          left: 0;
+          right: 0;
+          flex-direction: column;
+          background: #102a56;
+          box-shadow: 0 12px 20px #102a5620;
+        }
+
+        .nav-links.nav-open {
+          display: flex;
+        }
+
+        .nav-links a {
+          min-height: 43px;
+          padding: 0 17px;
+          border-top: 1px solid #ffffff18;
+          font-size: 12px;
+        }
+
+        .lead-section {
+          padding-top: 29px;
+          padding-bottom: 28px;
+        }
+
+        .lead-grid {
+          grid-template-columns: 1fr;
+          gap: 30px;
+        }
+
+        .lead-image {
+          height: clamp(210px, 54vw, 350px);
+        }
+
+        .lead-copy h1 {
+          font-size: clamp(28px, 6vw, 37px);
+        }
+
+        .side-story {
+          grid-template-columns: 115px minmax(0, 1fr);
+        }
+
+        .side-image {
+          height: 95px;
+        }
+
+        .trending-topics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .latest-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 25px 17px;
+        }
+
+        .latest-image {
+          height: clamp(130px, 27vw, 190px);
+        }
+
+        .latest-card-copy h3 {
+          font-size: 16px;
+        }
+
+        .category-feature {
+          grid-template-columns: 1fr;
+          gap: 20px;
+          padding: 25px;
+        }
+
+        .footer-main {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 30px 22px;
+        }
+      }
+
+      @media (max-width: 460px) {
+        .container {
+          width: calc(100% - 28px);
+        }
+
+        .utility-inner {
+          min-height: 31px;
+          font-size: 9px;
+        }
+
+        .masthead {
+          min-height: 78px;
+          gap: 8px;
+        }
+
+        .brand img {
+          height: 43px;
+          max-width: 48vw;
+        }
+
+        .latest-link {
+          padding: 8px;
+          gap: 5px;
+          font-size: 9px;
+        }
+
+        .section-heading {
+          gap: 8px;
+        }
+
+        .section-heading h2 {
+          font-size: 11px;
+        }
+
+        .section-date {
+          font-size: 9px;
+        }
+
+        .lead-image {
+          height: 220px;
+        }
+
+        .lead-copy h1 {
+          font-size: 28px;
+        }
+
+        .lead-copy p {
+          font-size: 12px;
+        }
+
+        .side-story {
+          grid-template-columns: 95px minmax(0, 1fr);
+          gap: 12px;
+        }
+
+        .side-image {
+          height: 90px;
+        }
+
+        .side-copy h3 {
+          font-size: 13px;
+        }
+
+        .side-copy p {
+          font-size: 10px;
+        }
+
+        .trending-heading {
+          flex-wrap: wrap;
+        }
+
+        .trending-heading h2 {
+          font-size: 11px;
+        }
+
+        .trending-caption {
+          width: 100%;
+          margin-left: 38px;
+        }
+
+        .trending-topics {
+          gap: 8px;
+        }
+
+        .trending-topics a {
+          padding: 12px 10px;
+          font-size: 10px;
+        }
+
+        .latest-grid {
+          gap: 24px 12px;
+        }
+
+        .latest-image {
+          height: 125px;
+          margin-bottom: 12px;
+        }
+
+        .latest-card-copy h3 {
+          font-size: 14px;
+        }
+
+        .latest-card-copy p {
+          font-size: 11px;
+        }
+
+        .category-feature {
+          padding: 22px 18px;
+        }
+
+        .category-feature-links {
+          gap: 0 15px;
+        }
+
+        .category-feature-links a {
+          font-size: 11px;
+        }
+
+        .footer-main {
+          gap: 28px 16px;
+        }
+
+        .footer-logo img {
+          height: 38px;
+          max-width: 200px;
+        }
+
+        .footer-column a {
+          font-size: 11px;
+        }
+
+        .footer-bottom-inner {
+          flex-direction: column;
+          gap: 8px;
+          font-size: 9px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        :global(html) {
+          scroll-behavior: auto;
+        }
+
+        .story-image img {
+          transition: none;
+        }
+      }
+    </style>
+  </body>
+</html>
