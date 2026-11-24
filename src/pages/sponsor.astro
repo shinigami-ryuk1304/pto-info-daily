@@ -1,0 +1,320 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<BaseLayout
+  title="Sponsor PTO Info Daily | Coming Soon"
+  description="Sponsorship opportunities at PTO Info Daily are coming soon."
+  canonicalUrl="https://ptoinfodaily.com/sponsor/"
+>
+  <SiteHeader />
+
+  <main class="sponsor-page">
+    <div class="background-circle circle-one" aria-hidden="true"></div>
+    <div class="background-circle circle-two" aria-hidden="true"></div>
+
+    <section class="content">
+      <div class="status-label">
+        <span class="status-dot"></span>
+        PARTNERSHIPS AT PTO
+      </div>
+
+      <p class="eyebrow">YOUR BRAND. OUR PLATFORM.</p>
+
+      <h1>
+        Good partnerships
+        <span>start here.</span>
+      </h1>
+
+      <p class="description">
+        We are preparing opportunities for brands, businesses and
+        organisations to connect with PTO Info Daily. Our sponsorship
+        platform is coming soon.
+      </p>
+
+      <div class="divider" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="information">
+        <span class="number">01</span>
+
+        <div>
+          <h2>Built for meaningful partnerships.</h2>
+
+          <p>
+            From brand visibility to sponsored features, we are working
+            towards partnerships that connect businesses with our readers
+            while keeping quality content at the centre.
+          </p>
+        </div>
+      </div>
+
+      <a class="home-button" href="/">
+        Back to homepage
+        <span aria-hidden="true">&rarr;</span>
+      </a>
+
+      <p class="footer-label">NEWS. PEOPLE. PERSPECTIVES.</p>
+    </section>
+
+    <div class="watermark" aria-hidden="true">PTO</div>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .sponsor-page {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    min-height: 650px;
+    align-items: center;
+    overflow: hidden;
+    padding: 80px 24px;
+    background: #f3f6fb;
+    color: #172033;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .status-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 34px;
+    padding: 10px 14px;
+    border: 1px solid #d7e3f5;
+    background: #ffffff;
+    color: #102a56;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #155eef;
+  }
+
+  .eyebrow {
+    margin: 0 0 16px;
+    color: #155eef;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+  }
+
+  h1 {
+    max-width: 720px;
+    margin: 0;
+    color: #102a56;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: clamp(40px, 7vw, 76px);
+    font-weight: 800;
+    letter-spacing: -2.5px;
+    line-height: 1.12;
+  }
+
+  h1 span {
+    display: block;
+    color: #155eef;
+  }
+
+  .description {
+    max-width: 570px;
+    margin: 25px 0 30px;
+    color: #596579;
+    font-size: 15px;
+    line-height: 1.9;
+  }
+
+  .divider {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 30px;
+  }
+
+  .divider span {
+    width: 42px;
+    height: 4px;
+    background: #155eef;
+  }
+
+  .divider span:nth-child(2) {
+    width: 17px;
+    background: #8eb5ff;
+  }
+
+  .divider span:nth-child(3) {
+    width: 7px;
+    background: #c4d8ff;
+  }
+
+  .information {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    max-width: 590px;
+    padding: 23px 0;
+    border-top: 1px solid #dce4f0;
+    border-bottom: 1px solid #dce4f0;
+  }
+
+  .number {
+    flex-shrink: 0;
+    color: #155eef;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .information h2 {
+    margin: 0 0 9px;
+    color: #102a56;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .information p {
+    margin: 0;
+    color: #687386;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .home-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    min-height: 48px;
+    margin-top: 30px;
+    padding: 0 20px;
+    background: #102a56;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+
+  .home-button:hover {
+    background: #155eef;
+  }
+
+  .home-button span {
+    font-size: 18px;
+  }
+
+  .footer-label {
+    margin: 45px 0 0;
+    color: #7c899d;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+  }
+
+  .background-circle {
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgba(21, 94, 239, 0.09);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .circle-one {
+    top: -180px;
+    right: -100px;
+    width: 550px;
+    height: 550px;
+  }
+
+  .circle-two {
+    top: -100px;
+    right: -20px;
+    width: 390px;
+    height: 390px;
+  }
+
+  .watermark {
+    position: absolute;
+    z-index: -1;
+    right: 3%;
+    bottom: -65px;
+    color: rgba(16, 42, 86, 0.035);
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: clamp(180px, 30vw, 360px);
+    font-weight: 800;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  @media (max-width: 640px) {
+    .sponsor-page {
+      min-height: auto;
+      padding: 65px 22px;
+    }
+
+    .status-label {
+      margin-bottom: 28px;
+      font-size: 10px;
+    }
+
+    h1 {
+      font-size: clamp(38px, 10vw, 55px);
+      letter-spacing: -1.8px;
+    }
+
+    .description {
+      font-size: 14px;
+    }
+
+    .information {
+      gap: 13px;
+    }
+
+    .information h2 {
+      font-size: 15px;
+    }
+
+    .circle-one {
+      right: -330px;
+    }
+
+    .circle-two {
+      right: -250px;
+    }
+
+    .watermark {
+      right: -10px;
+      bottom: -25px;
+      font-size: 190px;
+    }
+
+    .footer-label {
+      font-size: 9px;
+      letter-spacing: 2px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-button {
+      transition: none;
+    }
+  }
+</style>

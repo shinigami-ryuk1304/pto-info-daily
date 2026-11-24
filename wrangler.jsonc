@@ -1,0 +1,33 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "pto-info-daily",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"compatibility_date": "2026-10-26",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "pto-info-daily-db",
+			"database_id": "37568502-4894-416e-a795-68cf1af4363c",
+			"remote": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "7ee328bb303a4ea6842865cfdc1113d8",
+			"remote": true
+		},
+		{
+			"binding": "MEDIA",
+			"id": "9546fa2774ad4a2584cf16cb864009de",
+			"remote": true
+		}
+	]
+}

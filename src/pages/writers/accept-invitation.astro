@@ -1,0 +1,305 @@
+
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+
+export const prerender = false;
+
+const invitationToken = Astro.url.searchParams.get('token') ?? '';
+const tokenIsValid = /^[a-f0-9]{64}$/.test(invitationToken);
+---
+
+<BaseLayout
+  title="Set Up Your Writer Account | PTO Info Daily"
+  description="Securely set up your PTO Info Daily writer account."
+  noIndex={true}
+>
+  <SiteHeader />
+
+  <main class="setup-page">
+    <section class="setup-panel">
+      <a class="back-link" href="/">← Back to PTO Info Daily</a>
+
+      <p class="eyebrow">PTO INFO DAILY · WRITERS</p>
+      <h1>Set up your account</h1>
+      <p class="intro">
+        Create a secure password to activate your writer account.
+        Your invitation can only be used once and expires after 24 hours.
+      </p>
+
+      {tokenIsValid ? (
+        <form id="setup-form">
+          <input type="hidden" id="invitation-token" value={invitationToken} />
+
+          <label for="password">Create password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            minlength="12"
+            maxlength="256"
+            autocomplete="new-password"
+            required
+          />
+          <p class="hint">Use at least 12 characters.</p>
+
+          <label for="confirm-password">Confirm password</label>
+          <input
+            id="confirm-password"
+            name="confirm-password"
+            type="password"
+            minlength="12"
+            maxlength="256"
+            autocomplete="new-password"
+            required
+          />
+
+          <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+
+          <button id="submit-button" type="submit">
+            Activate account
+          </button>
+        </form>
+      ) : (
+        <div class="invalid-invitation">
+          <h2>Invitation link unavailable</h2>
+          <p>
+            This link is missing a valid invitation token. Please ask the
+            PTO Info Daily administrator for a new invitation.
+          </p>
+          <a href="/writers/login/">Go to writer sign in</a>
+        </div>
+      )}
+
+      <p class="security-note">
+        Already activated your account?
+        <a href="/writers/login/">Sign in here</a>.
+      </p>
+    </section>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#setup-form');
+  const message = document.querySelector<HTMLElement>('#form-message');
+  const submitButton = document.querySelector<HTMLButtonElement>('#submit-button');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!message || !submitButton) return;
+
+    const tokenInput = document.querySelector<HTMLInputElement>('#invitation-token');
+    const passwordInput = document.querySelector<HTMLInputElement>('#password');
+    const confirmationInput = document.querySelector<HTMLInputElement>('#confirm-password');
+
+    const token = tokenInput?.value ?? '';
+    const password = passwordInput?.value ?? '';
+    const confirmPassword = confirmationInput?.value ?? '';
+
+    message.textContent = '';
+    message.className = 'form-message';
+
+    if (password.length < 12 || password.length > 256) {
+      message.textContent = 'Your password must be between 12 and 256 characters.';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      message.textContent = 'The passwords do not match.';
+      return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Activating…';
+
+    try {
+      const response = await fetch('/api/writers/accept-invitation/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          password,
+          confirmPassword,
+        }),
+      });
+
+      const result: { message?: string } = await response.json();
+
+      if (!response.ok) {
+        message.textContent = result.message ?? 'Unable to activate your account.';
+        message.classList.add('error');
+        return;
+      }
+
+      message.textContent = 'Your account is ready. Redirecting to sign in…';
+      message.classList.add('success');
+      form.reset();
+
+      window.location.assign('/writers/login/');
+    } catch {
+      message.textContent = 'A connection error occurred. Please try again.';
+      message.classList.add('error');
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Activate account';
+    }
+  });
+</script>
+
+<style>
+  .setup-page {
+    min-height: 65vh;
+    padding: 64px 20px 80px;
+    background: #f3f5f8;
+    color: #172033;
+  }
+
+  .setup-panel {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 36px;
+    background: #fff;
+    border: 1px solid #e0e5ec;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgb(16 42 86 / 5%);
+  }
+
+  .back-link {
+    color: #155eef;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .eyebrow {
+    margin: 32px 0 10px;
+    color: #155eef;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  h1 {
+    margin: 0;
+    color: #102a56;
+    font-size: clamp(1.8rem, 5vw, 2.25rem);
+    line-height: 1.2;
+  }
+
+  .intro {
+    margin: 16px 0 28px;
+    color: #596579;
+    line-height: 1.7;
+  }
+
+  form label {
+    display: block;
+    margin: 20px 0 8px;
+    color: #172033;
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+
+  form input:not([type='hidden']) {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid #cbd3df;
+    border-radius: 5px;
+    background: #fff;
+    color: #172033;
+    font: inherit;
+  }
+
+  form input:focus {
+    border-color: #155eef;
+    outline: 3px solid rgb(21 94 239 / 12%);
+  }
+
+  .hint {
+    margin: 7px 0 0;
+    color: #697586;
+    font-size: 0.82rem;
+  }
+
+  button {
+    width: 100%;
+    min-height: 49px;
+    margin-top: 22px;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 5px;
+    background: #155eef;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #104bc4;
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+  }
+
+  .form-message {
+    margin: 16px 0 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .error {
+    color: #b42318;
+  }
+
+  .success {
+    color: #067647;
+  }
+
+  .security-note {
+    margin: 28px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid #e5e9f0;
+    color: #596579;
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  a {
+    color: #155eef;
+  }
+
+  .invalid-invitation {
+    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #e0e5ec;
+    border-radius: 5px;
+    line-height: 1.7;
+  }
+
+  .invalid-invitation h2 {
+    margin-top: 0;
+    color: #102a56;
+    font-size: 1.2rem;
+  }
+
+  @media (max-width: 560px) {
+    .setup-page {
+      padding: 32px 14px 48px;
+    }
+
+    .setup-panel {
+      padding: 24px 20px;
+    }
+  }
+</style>

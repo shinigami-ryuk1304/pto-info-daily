@@ -1,0 +1,292 @@
+
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<BaseLayout
+  title="Leadership — Coming Soon | PTO Info Daily"
+  description="Our leadership page is coming soon. Stay connected with PTO Info Daily."
+  canonicalUrl="https://ptoinfodaily.com/leadership/"
+>
+  <SiteHeader />
+
+  <main class="coming-soon">
+    <div class="background-mark" aria-hidden="true">PTO</div>
+
+    <section class="coming-content">
+      <p class="eyebrow"><span></span> PTO INFO DAILY</p>
+
+      <div class="status-mark" aria-hidden="true">
+        <span class="status-line"></span>
+        <span class="status-dot"></span>
+        <span class="status-line"></span>
+      </div>
+
+      <p class="section-label">LEADERSHIP</p>
+
+      <h1>
+        Something<br />
+        <span>meaningful</span><br />
+        is taking shape.
+      </h1>
+
+      <p class="description">
+        We're preparing this space to introduce the vision and leadership
+        behind PTO Info Daily. There's more to come.
+      </p>
+
+      <div class="coming-label">
+        <span class="pulse"></span>
+        COMING SOON
+      </div>
+
+      <a class="home-link" href="/">
+        <span aria-hidden="true">←</span> Back to homepage
+      </a>
+    </section>
+
+    <div class="bottom-line">
+      <span>NEWS. PEOPLE. PERSPECTIVES.</span>
+      <span>INDEPENDENTLY MINDED. ALWAYS MOVING.</span>
+    </div>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .coming-soon {
+    position: relative;
+    display: flex;
+    min-height: 660px;
+    align-items: center;
+    overflow: hidden;
+    padding: 72px max(7%, calc((100% - 1100px) / 2)) 100px;
+    background: #f5f7fb;
+    color: #172033;
+    isolation: isolate;
+  }
+
+  .coming-soon::before {
+    position: absolute;
+    z-index: -1;
+    top: -220px;
+    right: -180px;
+    width: 650px;
+    height: 650px;
+    border: 1px solid rgba(21, 94, 239, 0.10);
+    border-radius: 50%;
+    content: "";
+  }
+
+  .coming-soon::after {
+    position: absolute;
+    z-index: -1;
+    top: -130px;
+    right: -90px;
+    width: 470px;
+    height: 470px;
+    border: 1px solid rgba(21, 94, 239, 0.10);
+    border-radius: 50%;
+    content: "";
+  }
+
+  .background-mark {
+    position: absolute;
+    z-index: -1;
+    right: 4%;
+    bottom: 12%;
+    color: rgba(16, 42, 86, 0.035);
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: clamp(180px, 30vw, 390px);
+    font-weight: 800;
+    letter-spacing: -0.1em;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .coming-content {
+    width: min(100%, 720px);
+    animation: reveal 650ms ease-out both;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 48px;
+    color: #102a56;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+
+  .eyebrow span {
+    width: 26px;
+    height: 3px;
+    background: #155eef;
+  }
+
+  .status-mark {
+    display: flex;
+    width: 110px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 26px;
+  }
+
+  .status-line {
+    width: 32px;
+    height: 1px;
+    background: #aabbd9;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #155eef;
+    box-shadow: 0 0 0 5px rgba(21, 94, 239, 0.09);
+  }
+
+  .section-label {
+    margin: 0 0 18px;
+    color: #155eef;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+  }
+
+  h1 {
+    margin: 0;
+    color: #102a56;
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: clamp(42px, 7vw, 76px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -3px;
+  }
+
+  h1 span {
+    color: #155eef;
+  }
+
+  .description {
+    max-width: 480px;
+    margin: 24px 0 30px;
+    color: #596579;
+    font-size: 16px;
+    line-height: 1.9;
+  }
+
+  .coming-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    padding: 13px 16px;
+    border: 1px solid #dce5f3;
+    background: rgba(255, 255, 255, 0.78);
+    color: #102a56;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+
+  .pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #155eef;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  .home-link {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    color: #596579;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 180ms ease;
+  }
+
+  .home-link:hover {
+    color: #155eef;
+  }
+
+  .home-link span {
+    font-size: 18px;
+  }
+
+  .bottom-line {
+    position: absolute;
+    right: 7%;
+    bottom: 24px;
+    left: 7%;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e1e6ef;
+    color: #8993a4;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.8); }
+  }
+
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .coming-content,
+    .pulse {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .coming-soon {
+      min-height: 590px;
+      padding: 54px 24px 100px;
+    }
+
+    .eyebrow {
+      margin-bottom: 42px;
+    }
+
+    h1 {
+      font-size: clamp(40px, 12vw, 60px);
+      letter-spacing: -2px;
+    }
+
+    .description {
+      font-size: 14px;
+    }
+
+    .background-mark {
+      right: -8%;
+      bottom: 15%;
+      font-size: 210px;
+    }
+
+    .bottom-line {
+      right: 24px;
+      left: 24px;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 8px;
+    }
+  }
+</style>

@@ -38,3 +38,7 @@ Thumbs.db
 # Local editor settings
 .vscode/*
 !.vscode/extensions.json
+
+# Local Cloudflare tooling and backups
+.wrangler/
+backups/

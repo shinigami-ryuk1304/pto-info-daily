@@ -1,0 +1,116 @@
+
+---
+interface Props {
+  title: string;
+  description?: string;
+  canonicalUrl?: string;
+  ogType?: "website" | "article";
+  ogImage?: string;
+  noIndex?: boolean;
+}
+
+const {
+  title,
+  description = "PTO Info Daily brings you Nigerian news, politics, entertainment, business, sports, technology and lifestyle stories.",
+  canonicalUrl,
+  ogType = "website",
+  ogImage,
+  noIndex = false,
+} = Astro.props;
+
+// Pages without their own picture share the PTO logo, so links posted on
+// WhatsApp, Facebook and X always show a branded preview.
+const absoluteOgImage = new URL(
+  ogImage ?? "/og-image.jpg",
+  Astro.site ?? "https://ptoinfodaily.com",
+).href;
+// The default share image is a full-size banner too.
+const hasOwnImage = true;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="theme-color" content="#102A56" />
+    <meta name="color-scheme" content="light" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- PTO Info Daily favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png?v=4" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" />
+
+    <!-- Brand typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Social sharing metadata -->
+    <meta property="og:site_name" content="PTO Info Daily" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+
+    <meta property="og:locale" content="en_NG" />
+    {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+    <meta property="og:image" content={absoluteOgImage} />
+
+    <meta
+      name="twitter:card"
+      content={hasOwnImage ? "summary_large_image" : "summary"}
+    />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absoluteOgImage} />
+
+    <!-- News feed for readers and aggregators -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="PTO Info Daily"
+      href="/rss.xml"
+    />
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  html {
+    font-family: "Inter", Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    color: #172033;
+    background: #ffffff;
+    font-family: "Inter", Arial, sans-serif;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  img {
+    max-width: 100%;
+  }
+</style>

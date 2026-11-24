@@ -1,0 +1,612 @@
+---
+import { render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import {
+  getPublishedArticleBySlug,
+  getPublishedArticles,
+  type PublicArticle,
+} from "../../lib/public-articles";
+
+export const prerender = false;
+
+const slug = Astro.params.slug;
+
+// Only published D1 articles or non-draft Markdown articles are returned.
+const article = await getPublishedArticleBySlug(slug);
+
+if (!article) {
+  // Show the branded "not found" page (it sends a real 404 status).
+  return Astro.rewrite("/404");
+}
+
+// Related stories: same category first, then the latest from elsewhere.
+const allArticles = await getPublishedArticles();
+const position = allArticles.findIndex((item) => item.id === article.id);
+const newerStory = position > 0 ? allArticles[position - 1] : undefined;
+const olderStory = position >= 0 ? allArticles[position + 1] : undefined;
+
+const others = allArticles.filter((item) => item.id !== article.id);
+const sameCategory = others.filter((item) => item.data.category === article.data.category);
+const relatedStories: PublicArticle[] = [
+  ...sameCategory,
+  ...others.filter((item) => item.data.category !== article.data.category),
+].slice(0, 3);
+
+const storyUrl = (story: PublicArticle) => `/news/${story.id}/`;
+const shortDate = (date: Date) =>
+  date.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+
+const Content =
+  article.source === "markdown" ? (await render(article.entry)).Content : null;
+const articleHtml = article.source === "d1" ? article.html : "";
+
+const formattedDate = article.data.pubDate.toLocaleDateString("en-NG", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const articleSlug = article.id;
+const canonicalUrl = `https://ptoinfodaily.com/news/${articleSlug}/`;
+const articleCategory = article.data.category.replaceAll("-", " ");
+
+const imageUrl = article.data.heroImage
+  ? new URL(article.data.heroImage, "https://ptoinfodaily.com").href
+  : undefined;
+
+// Times and structured data so Google and social apps understand the story.
+const publishedIso = article.data.pubDate.toISOString();
+const modifiedIso = (article.data.updatedDate ?? article.data.pubDate).toISOString();
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+  headline: article.data.title.slice(0, 110),
+  description: article.data.description,
+  articleSection: articleCategory,
+  datePublished: publishedIso,
+  dateModified: modifiedIso,
+  inLanguage: "en-NG",
+  ...(imageUrl ? { image: [imageUrl] } : {}),
+  author: [{ "@type": "Person", name: article.data.author }],
+  publisher: {
+    "@type": "NewsMediaOrganization",
+    name: "PTO Info Daily",
+    url: "https://ptoinfodaily.com/",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://ptoinfodaily.com/pto-logo.png",
+    },
+  },
+};
+
+// "<" is escaped so article text can never close the script tag early.
+const structuredDataJson = JSON.stringify(structuredData).replace(/</g, "\\u003c");
+---
+
+<BaseLayout
+  title={`${article.data.title} | PTO Info Daily`}
+  description={article.data.description}
+  canonicalUrl={canonicalUrl}
+  ogType="article"
+  ogImage={imageUrl}
+>
+  <Fragment slot="head">
+    <meta property="article:published_time" content={publishedIso} />
+    <meta property="article:modified_time" content={modifiedIso} />
+    <meta property="article:section" content={articleCategory} />
+    <meta property="article:author" content={article.data.author} />
+    <meta name="author" content={article.data.author} />
+    <script type="application/ld+json" set:html={structuredDataJson} />
+  </Fragment>
+
+  <SiteHeader />
+
+  <main class="article-page">
+    <article class="article-container">
+      <a class="back-link" href={`/category/${article.data.category}/`}>
+        <span aria-hidden="true">←</span>
+        Back to {articleCategory}
+      </a>
+
+      <p class="article-category">{articleCategory}</p>
+
+      <h1>{article.data.title}</h1>
+
+      <p class="article-description">{article.data.description}</p>
+
+      <div class="article-meta">
+        <span>By {article.data.author}</span>
+
+        <time datetime={article.data.pubDate.toISOString()}>
+          {formattedDate}
+        </time>
+
+        {article.data.updatedDate && (
+          <span>
+            Updated{" "}
+            {article.data.updatedDate.toLocaleDateString("en-NG", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        )}
+      </div>
+
+      {article.data.heroImage && (
+        <figure class="hero-image">
+          <img
+            src={article.data.heroImage}
+            alt={article.data.imageAlt || article.data.title}
+            fetchpriority="high"
+          />
+
+          {article.data.imageAlt && (
+            <figcaption>{article.data.imageAlt}</figcaption>
+          )}
+        </figure>
+      )}
+
+      <div class="article-body">
+        {Content ? <Content /> : <Fragment set:html={articleHtml} />}
+      </div>
+
+      {(newerStory || olderStory) && (
+        <nav class="story-nav" aria-label="More stories">
+          {olderStory ? (
+            <a class="story-nav-link older" href={storyUrl(olderStory)}>
+              <span class="story-nav-label"><span aria-hidden="true">←</span> Previous story</span>
+              <span class="story-nav-title">{olderStory.data.title}</span>
+            </a>
+          ) : <span></span>}
+
+          {newerStory && (
+            <a class="story-nav-link newer" href={storyUrl(newerStory)}>
+              <span class="story-nav-label">Next story <span aria-hidden="true">→</span></span>
+              <span class="story-nav-title">{newerStory.data.title}</span>
+            </a>
+          )}
+        </nav>
+      )}
+
+      <div class="article-end">
+        <span class="article-end-rule"></span>
+        <p>Continue exploring PTO Info Daily</p>
+        <a href="/">
+          Read more stories <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </article>
+
+    {relatedStories.length > 0 && (
+      <section class="related" aria-labelledby="related-heading">
+        <div class="related-heading">
+          <span class="related-marker" aria-hidden="true"></span>
+          <h2 id="related-heading">
+            {sameCategory.length > 0 ? `MORE IN ${articleCategory.toUpperCase()}` : "MORE STORIES"}
+          </h2>
+          <span class="related-rule" aria-hidden="true"></span>
+        </div>
+
+        <div class="related-grid">
+          {relatedStories.map((story) => (
+            <article class="related-card">
+              <a class="related-image" href={storyUrl(story)} aria-label={`Read ${story.data.title}`}>
+                {story.data.heroImage ? (
+                  <img
+                    src={story.data.heroImage}
+                    alt={story.data.imageAlt || story.data.title}
+                    loading="lazy"
+                    width="400"
+                    height="250"
+                  />
+                ) : (
+                  <span class="related-placeholder">PTO</span>
+                )}
+              </a>
+              <a class="related-category" href={`/category/${story.data.category}/`}>
+                {story.data.category.replaceAll("-", " ")}
+              </a>
+              <h3><a href={storyUrl(story)}>{story.data.title}</a></h3>
+              <time datetime={story.data.pubDate.toISOString()}>{shortDate(story.data.pubDate)}</time>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .article-page {
+    min-height: 70vh;
+    padding: 48px 24px 88px;
+    background: #ffffff;
+    color: #172033;
+    font-family: "Inter", Arial, sans-serif;
+  }
+
+  .article-container {
+    max-width: 850px;
+    margin: 0 auto;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 34px;
+    color: #155eef;
+    text-decoration: none;
+    text-transform: capitalize;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .back-link:hover {
+    color: #102a56;
+    text-decoration: underline;
+  }
+
+  .article-category {
+    margin: 0 0 14px;
+    color: #155eef;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .article-page h1,
+  .article-body :global(h2),
+  .article-body :global(h3) {
+    font-family: "Montserrat", Arial, sans-serif;
+  }
+
+  .article-page h1 {
+    margin: 0 0 20px;
+    color: #172033;
+    font-size: clamp(2rem, 5vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+  }
+
+  .article-description {
+    margin: 0;
+    color: #586174;
+    font-size: clamp(1.05rem, 2vw, 1.22rem);
+    line-height: 1.8;
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin: 28px 0;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #e2e6ed;
+    color: #586174;
+    font-size: 0.88rem;
+  }
+
+  .article-meta span:first-child {
+    color: #172033;
+    font-weight: 600;
+  }
+
+  .hero-image {
+    margin: 30px 0 36px;
+  }
+
+  .hero-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 620px;
+    object-fit: cover;
+    border-radius: 3px;
+  }
+
+  figcaption {
+    margin-top: 10px;
+    color: #586174;
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+
+  .article-body {
+    color: #293449;
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 1.08rem;
+    line-height: 1.95;
+    overflow-wrap: anywhere;
+  }
+
+  .article-body :global(h2),
+  .article-body :global(h3) {
+    color: #172033;
+    font-weight: 750;
+    line-height: 1.35;
+  }
+
+  .article-body :global(h2) {
+    margin: 2em 0 0.7em;
+    font-size: clamp(1.45rem, 3vw, 1.9rem);
+  }
+
+  .article-body :global(h3) {
+    margin: 1.8em 0 0.65em;
+    font-size: 1.25rem;
+  }
+
+  .article-body :global(p) {
+    margin: 0 0 1.45em;
+  }
+
+  .article-body :global(a) {
+    color: #155eef;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .article-body :global(a:hover) {
+    color: #102a56;
+  }
+
+  .article-body :global(img) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .article-body :global(ul),
+  .article-body :global(ol) {
+    padding-left: 1.5em;
+    margin-bottom: 1.5em;
+  }
+
+  .article-body :global(li) {
+    margin-bottom: 0.5em;
+  }
+
+  .article-body :global(blockquote) {
+    margin: 1.8em 0;
+    padding: 0.7em 0 0.7em 1.2em;
+    border-left: 3px solid #155eef;
+    color: #46536a;
+    background: #f3f6fb;
+  }
+
+  .article-body :global(hr) {
+    border: 0;
+    border-top: 1px solid #e2e6ed;
+    margin: 2em 0;
+  }
+
+  .article-end {
+    margin-top: 56px;
+    padding-top: 26px;
+    border-top: 1px solid #e2e6ed;
+  }
+
+  .article-end-rule {
+    display: block;
+    width: 42px;
+    height: 3px;
+    margin-bottom: 18px;
+    background: #155eef;
+  }
+
+  .article-end p {
+    margin: 0 0 10px;
+    color: #586174;
+    font-size: 0.92rem;
+  }
+
+  .article-end a {
+    color: #155eef;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .article-end a:hover {
+    color: #102a56;
+    text-decoration: underline;
+  }
+
+  /* Previous / next story */
+  .story-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 48px;
+  }
+
+  .story-nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 20px;
+    border: 1px solid #e2e6ed;
+    color: #172033;
+    text-decoration: none;
+    transition: border-color 160ms ease;
+  }
+
+  .story-nav-link:hover { border-color: #155eef; }
+
+  .story-nav-link.newer {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .story-nav-label {
+    color: #155eef;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .story-nav-title {
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  /* Related stories */
+  .related {
+    max-width: 1100px;
+    margin: 72px auto 0;
+    padding-top: 8px;
+  }
+
+  .related-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+
+  .related-marker {
+    width: 4px;
+    height: 22px;
+    background: #155eef;
+  }
+
+  .related-heading h2 {
+    margin: 0;
+    color: #102a56;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .related-rule {
+    flex: 1;
+    height: 1px;
+    background: #e2e6ed;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+  }
+
+  .related-card { min-width: 0; }
+
+  .related-image {
+    display: block;
+    text-decoration: none;
+    aspect-ratio: 16 / 10;
+    margin-bottom: 14px;
+    overflow: hidden;
+    background: #eef3fb;
+  }
+
+  .related-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 300ms ease;
+  }
+
+  .related-card:hover .related-image img { transform: scale(1.03); }
+
+  .related-placeholder {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    color: #155eef;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+  }
+
+  .related-category {
+    color: #155eef;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .related-card h3 {
+    margin: 8px 0 8px;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 750;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .related-card h3 a {
+    color: #172033;
+    text-decoration: none;
+  }
+
+  .related-card h3 a:hover { color: #155eef; }
+
+  .related-card time {
+    color: #7b8596;
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 860px) {
+    .related-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .story-nav { grid-template-columns: 1fr; }
+    .story-nav-link.newer {
+      grid-column: auto;
+      text-align: left;
+    }
+
+    .related { margin-top: 56px; }
+    .related-grid { grid-template-columns: 1fr; gap: 26px; }
+  }
+
+  @media (max-width: 600px) {
+    .article-page {
+      padding: 32px 18px 56px;
+    }
+
+    .back-link {
+      margin-bottom: 26px;
+    }
+
+    .article-meta {
+      gap: 10px 16px;
+      margin: 22px 0;
+    }
+
+    .article-body {
+      font-size: 1rem;
+      line-height: 1.85;
+    }
+
+    .hero-image {
+      margin: 24px 0 30px;
+    }
+  }
+</style>

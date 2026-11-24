@@ -1,0 +1,209 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<BaseLayout
+  title="Sponsorship | PTO Info Daily"
+  description="Explore sponsorship opportunities with PTO Info Daily. Our sponsorship platform is coming soon."
+  canonicalUrl="https://ptoinfodaily.com/sponsor/"
+>
+  <SiteHeader />
+
+  <main class="sponsorship-page">
+    <section class="content">
+      <span class="eyebrow">
+        <span class="dot"></span>
+        PARTNERSHIPS AT PTO
+      </span>
+
+      <p class="overline">YOUR BRAND. OUR PLATFORM.</p>
+
+      <h1>
+        Good partnerships
+        <span>start here.</span>
+      </h1>
+
+      <p class="description">
+        We are preparing opportunities for brands, businesses and
+        organisations to connect with PTO Info Daily.
+        Our sponsorship platform is coming soon.
+      </p>
+
+      <div class="divider"></div>
+
+      <h2>Built for meaningful partnerships.</h2>
+
+      <p class="supporting-text">
+        From brand visibility to sponsored features, we are working towards
+        partnerships that connect businesses with our readers while keeping
+        quality content at the centre.
+      </p>
+
+      <a class="home-button" href="/">
+        Back to homepage <span aria-hidden="true">&rarr;</span>
+      </a>
+
+      <p class="brand-line">NEWS. PEOPLE. PERSPECTIVES.</p>
+    </section>
+
+    <div class="watermark" aria-hidden="true">PTO</div>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .sponsorship-page {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    min-height: 620px;
+    align-items: center;
+    overflow: hidden;
+    padding: 75px 24px;
+    background: #f3f6fb;
+    color: #172033;
+  }
+
+  .content {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+    padding: 10px 14px;
+    border: 1px solid #d7e3f5;
+    background: #fff;
+    color: #102a56;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #155eef;
+  }
+
+  .overline {
+    margin: 0 0 16px;
+    color: #155eef;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+  }
+
+  h1 {
+    margin: 0;
+    color: #102a56;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: clamp(40px, 7vw, 76px);
+    font-weight: 800;
+    letter-spacing: -2.5px;
+    line-height: 1.12;
+  }
+
+  h1 span {
+    display: block;
+    color: #155eef;
+  }
+
+  .description {
+    max-width: 570px;
+    margin: 25px 0;
+    color: #596579;
+    font-size: 15px;
+    line-height: 1.9;
+  }
+
+  .divider {
+    width: 55px;
+    height: 4px;
+    margin: 28px 0;
+    background: #155eef;
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    color: #102a56;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 18px;
+  }
+
+  .supporting-text {
+    max-width: 570px;
+    color: #687386;
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .home-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 22px;
+    min-height: 48px;
+    margin-top: 24px;
+    padding: 0 20px;
+    background: #102a56;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .home-button:hover {
+    background: #155eef;
+  }
+
+  .brand-line {
+    margin-top: 42px;
+    color: #7c899d;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+  }
+
+  .watermark {
+    position: absolute;
+    z-index: -1;
+    right: 3%;
+    bottom: -60px;
+    color: rgba(16, 42, 86, 0.035);
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: clamp(180px, 30vw, 360px);
+    font-weight: 800;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  @media (max-width: 640px) {
+    .sponsorship-page {
+      min-height: auto;
+      padding: 65px 22px;
+    }
+
+    h1 {
+      font-size: clamp(38px, 10vw, 55px);
+      letter-spacing: -1.8px;
+    }
+
+    .description {
+      font-size: 14px;
+    }
+
+    .watermark {
+      right: -10px;
+      bottom: -25px;
+      font-size: 190px;
+    }
+  }
+</style>

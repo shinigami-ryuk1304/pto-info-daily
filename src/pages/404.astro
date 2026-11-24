@@ -1,0 +1,262 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
+export const prerender = false;
+
+// Always answer with a real 404 status so search engines drop dead links.
+Astro.response.status = 404;
+Astro.response.statusText = "Not Found";
+
+const categories = [
+  { label: "News", slug: "news" },
+  { label: "Politics", slug: "politics" },
+  { label: "Entertainment", slug: "entertainment" },
+  { label: "Business", slug: "business" },
+  { label: "Sports", slug: "sports" },
+  { label: "Trending", slug: "trending" },
+];
+---
+
+<BaseLayout
+  title="Page not found | PTO Info Daily"
+  description="The page you were looking for could not be found on PTO Info Daily."
+  noIndex={true}
+>
+  <SiteHeader />
+
+  <main class="not-found">
+    <div class="background-mark" aria-hidden="true">404</div>
+
+    <section class="not-found-content">
+      <p class="eyebrow"><span aria-hidden="true"></span> PTO INFO DAILY</p>
+      <p class="section-label">ERROR 404</p>
+
+      <h1>
+        This story<br />
+        <span>isn't here.</span>
+      </h1>
+
+      <p class="description">
+        The page may have been moved, unpublished or never existed. Try
+        searching for it, or explore our latest coverage.
+      </p>
+
+      <form class="search-form" action="/search/" method="get" role="search">
+        <label class="visually-hidden" for="not-found-search">Search PTO Info Daily</label>
+        <input
+          id="not-found-search"
+          type="search"
+          name="q"
+          placeholder="Search news, people and topics"
+          autocomplete="off"
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      <nav class="category-links" aria-label="Explore categories">
+        {categories.map((category) => (
+          <a href={`/category/${category.slug}/`}>{category.label}</a>
+        ))}
+      </nav>
+
+      <a class="home-link" href="/">
+        <span aria-hidden="true">←</span> Back to homepage
+      </a>
+    </section>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .not-found {
+    position: relative;
+    display: flex;
+    min-height: 620px;
+    align-items: center;
+    overflow: hidden;
+    padding: 72px max(7%, calc((100% - 1100px) / 2)) 88px;
+    background: #f5f7fb;
+    color: #172033;
+    isolation: isolate;
+  }
+
+  .not-found::before {
+    position: absolute;
+    z-index: -1;
+    top: -220px;
+    right: -180px;
+    width: 650px;
+    height: 650px;
+    border: 1px solid rgba(21, 94, 239, 0.10);
+    border-radius: 50%;
+    content: "";
+  }
+
+  .background-mark {
+    position: absolute;
+    z-index: -1;
+    right: 4%;
+    bottom: 10%;
+    color: rgba(16, 42, 86, 0.04);
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: clamp(160px, 28vw, 360px);
+    font-weight: 800;
+    letter-spacing: -0.08em;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .not-found-content {
+    width: min(100%, 680px);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 40px;
+    color: #102a56;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+
+  .eyebrow span {
+    width: 26px;
+    height: 3px;
+    background: #155eef;
+  }
+
+  .section-label {
+    margin: 0 0 16px;
+    color: #155eef;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+  }
+
+  h1 {
+    margin: 0;
+    color: #102a56;
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: clamp(40px, 7vw, 72px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -3px;
+  }
+
+  h1 span { color: #155eef; }
+
+  .description {
+    max-width: 500px;
+    margin: 22px 0 28px;
+    color: #596579;
+    font-size: 16px;
+    line-height: 1.85;
+  }
+
+  .search-form {
+    display: flex;
+    max-width: 520px;
+    border: 1px solid #cfd8e6;
+    background: #ffffff;
+  }
+
+  .search-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 0;
+    background: transparent;
+    color: #172033;
+    font: inherit;
+    font-size: 15px;
+  }
+
+  .search-form input:focus { outline: none; }
+
+  .search-form:focus-within {
+    outline: 2px solid #155eef;
+    outline-offset: 2px;
+  }
+
+  .search-form button {
+    padding: 0 22px;
+    border: 0;
+    background: #155eef;
+    color: #ffffff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .search-form button:hover { background: #102a56; }
+
+  .category-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+  }
+
+  .category-links a {
+    padding: 8px 13px;
+    border: 1px solid #dce5f3;
+    background: rgba(255, 255, 255, 0.8);
+    color: #102a56;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .category-links a:hover {
+    border-color: #155eef;
+    color: #155eef;
+  }
+
+  .home-link {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: 10px;
+    margin-top: 28px;
+    color: #596579;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .home-link:hover { color: #155eef; }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 600px) {
+    .not-found {
+      min-height: 560px;
+      padding: 48px 20px 72px;
+    }
+
+    .eyebrow { margin-bottom: 32px; }
+
+    h1 {
+      font-size: clamp(36px, 11vw, 54px);
+      letter-spacing: -2px;
+    }
+
+    .description { font-size: 14px; }
+
+    .search-form button { padding: 0 16px; }
+  }
+</style>

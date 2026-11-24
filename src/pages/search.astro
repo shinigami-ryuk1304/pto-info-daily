@@ -1,0 +1,630 @@
+
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<BaseLayout
+  title="Search News | PTO Info Daily"
+  description="Search PTO Info Daily for Nigerian news, politics, entertainment, business, sports, lifestyle and technology stories."
+  canonicalUrl="https://ptoinfodaily.com/search/"
+  noIndex={true}
+>
+  <SiteHeader />
+
+  <main class="search-page">
+    <header class="search-heading">
+      <p class="eyebrow">PTO INFO DAILY / SEARCH</p>
+      <h1>Search our stories</h1>
+      <p>Find published news, people, topics and features.</p>
+    </header>
+
+    <form class="search-form" action="/search/" method="get" role="search">
+      <label for="search-query">What are you looking for?</label>
+      <div class="search-input-row">
+        <input
+          id="search-query"
+          type="search"
+          name="q"
+          placeholder="Search news, people and topics..."
+          required
+        />
+        <button type="submit">Search</button>
+      </div>
+    </form>
+
+    <section class="results-section" aria-live="polite">
+      <div class="results-heading">
+        <h2 id="results-title">Explore our stories</h2>
+        <span id="results-count"></span>
+      </div>
+
+      <p id="search-status" class="search-status">
+        Loading published stories...
+      </p>
+
+      <div id="results-container" class="results-list"></div>
+
+      <div id="empty-state" class="empty-state" hidden>
+        <h2 id="empty-title">No matching stories found</h2>
+        <p id="empty-description">
+          Try another search term or browse our categories.
+        </p>
+        <a href="/category/news/">Browse news</a>
+      </div>
+
+      <div id="category-explorer" class="category-explorer" hidden>
+        <h2>Explore categories</h2>
+        <div class="category-links">
+          <a href="/category/news/">News</a>
+          <a href="/category/politics/">Politics</a>
+          <a href="/category/entertainment/">Entertainment</a>
+          <a href="/category/celebrity-news/">Celebrity News</a>
+          <a href="/category/trending/">Trending Stories</a>
+          <a href="/category/sports/">Sports</a>
+          <a href="/category/business/">Business</a>
+          <a href="/category/lifestyle/">Lifestyle</a>
+          <a href="/category/technology/">Technology</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<script>
+  interface SearchArticle {
+    title: string;
+    description: string;
+    category: string;
+    author: string;
+    pubDate: string;
+    heroImage?: string;
+    imageAlt?: string;
+    url: string;
+    body?: string;
+  }
+
+  const form = document.querySelector<HTMLFormElement>(".search-form");
+  const input = document.querySelector<HTMLInputElement>("#search-query");
+  const resultsTitle =
+    document.querySelector<HTMLHeadingElement>("#results-title");
+  const resultsCount =
+    document.querySelector<HTMLSpanElement>("#results-count");
+  const status =
+    document.querySelector<HTMLParagraphElement>("#search-status");
+  const resultsContainer =
+    document.querySelector<HTMLDivElement>("#results-container");
+  const emptyState =
+    document.querySelector<HTMLDivElement>("#empty-state");
+  const emptyTitle =
+    document.querySelector<HTMLHeadingElement>("#empty-title");
+  const emptyDescription =
+    document.querySelector<HTMLParagraphElement>("#empty-description");
+  const categoryExplorer =
+    document.querySelector<HTMLDivElement>("#category-explorer");
+
+  let articles: SearchArticle[] = [];
+  let searchIndexLoaded = false;
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const categoryName = (slug: string): string =>
+    slug.replaceAll("-", " ");
+
+  function showEmptyState(title: string, description: string): void {
+    if (emptyState) emptyState.hidden = false;
+    if (emptyTitle) emptyTitle.textContent = title;
+    if (emptyDescription) emptyDescription.textContent = description;
+  }
+
+  function makeResultCard(article: SearchArticle): HTMLElement {
+    const card = document.createElement("article");
+    card.className = "result-card";
+
+    if (article.heroImage) {
+      const imageLink = document.createElement("a");
+      imageLink.className = "result-image";
+      imageLink.href = article.url;
+      imageLink.setAttribute("aria-label", article.title);
+
+      const image = document.createElement("img");
+      image.src = article.heroImage;
+      image.alt = article.imageAlt || article.title;
+      image.loading = "lazy";
+
+      imageLink.appendChild(image);
+      card.appendChild(imageLink);
+    }
+
+    const copy = document.createElement("div");
+    copy.className = "result-copy";
+
+    const category = document.createElement("a");
+    category.className = "category-label";
+    category.href = `/category/${encodeURIComponent(article.category)}/`;
+    category.textContent = categoryName(article.category).toUpperCase();
+
+    const heading = document.createElement("h3");
+    const titleLink = document.createElement("a");
+    titleLink.href = article.url;
+    titleLink.textContent = article.title;
+    heading.appendChild(titleLink);
+
+    const description = document.createElement("p");
+    description.textContent = article.description;
+
+    const meta = document.createElement("div");
+    meta.className = "result-meta";
+
+    const author = document.createElement("span");
+    author.textContent = `By ${article.author}`;
+
+    const date = document.createElement("time");
+    date.dateTime = article.pubDate;
+    date.textContent = formatDate(article.pubDate);
+
+    meta.appendChild(author);
+    meta.appendChild(date);
+
+    copy.appendChild(category);
+    copy.appendChild(heading);
+    copy.appendChild(description);
+    copy.appendChild(meta);
+
+    card.appendChild(copy);
+
+    return card;
+  }
+
+  function performSearch(searchTerm: string): void {
+    if (
+      !resultsContainer ||
+      !resultsTitle ||
+      !resultsCount ||
+      !status ||
+      !emptyState ||
+      !categoryExplorer
+    ) {
+      return;
+    }
+
+    if (!searchIndexLoaded) {
+      status.hidden = false;
+      status.textContent =
+        "Search is temporarily unavailable. Please refresh the page and try again.";
+      return;
+    }
+
+    const term = searchTerm.trim().toLocaleLowerCase();
+
+    resultsContainer.replaceChildren();
+    emptyState.hidden = true;
+    categoryExplorer.hidden = true;
+    status.hidden = true;
+
+    if (!term) {
+      resultsTitle.textContent = "Explore our stories";
+      resultsCount.textContent = `${articles.length} published ${
+        articles.length === 1 ? "story" : "stories"
+      }`;
+
+      if (articles.length > 0) {
+        articles.forEach((article) => {
+          resultsContainer.appendChild(makeResultCard(article));
+        });
+      } else {
+        showEmptyState(
+          "No stories published yet",
+          "New articles will appear here when they are published."
+        );
+      }
+
+      categoryExplorer.hidden = false;
+      return;
+    }
+
+    const matches = articles.filter((article) => {
+      const searchableText = [
+        article.title,
+        article.description,
+        categoryName(article.category),
+        article.author,
+        article.body ?? "",
+      ]
+        .join(" ")
+        .toLocaleLowerCase();
+
+      return searchableText.includes(term);
+    });
+
+    resultsTitle.textContent = "Search results";
+    resultsCount.textContent = `${matches.length} ${
+      matches.length === 1 ? "result" : "results"
+    }`;
+
+    if (matches.length === 0) {
+      showEmptyState(
+        "No matching stories found",
+        `We couldn't find published stories matching "${searchTerm.trim()}". Try a different word or browse our categories.`
+      );
+
+      categoryExplorer.hidden = false;
+      return;
+    }
+
+    matches
+      .sort(
+        (a, b) =>
+          new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+      )
+      .forEach((article) => {
+        resultsContainer.appendChild(makeResultCard(article));
+      });
+  }
+
+  function updateSearchUrl(searchTerm: string): void {
+    const nextUrl = new URL(window.location.href);
+    const term = searchTerm.trim();
+
+    if (term) {
+      nextUrl.searchParams.set("q", term);
+    } else {
+      nextUrl.searchParams.delete("q");
+    }
+
+    window.history.pushState({}, "", nextUrl);
+  }
+
+  async function initialiseSearch(): Promise<void> {
+    if (!input || !form || !status) {
+      return;
+    }
+
+    const initialQuery =
+      new URLSearchParams(window.location.search).get("q") ?? "";
+
+    input.value = initialQuery;
+
+    form.addEventListener("submit", (event: SubmitEvent) => {
+      event.preventDefault();
+
+      const searchTerm = input.value.trim();
+
+      updateSearchUrl(searchTerm);
+      performSearch(searchTerm);
+    });
+
+    window.addEventListener("popstate", () => {
+      const searchTerm =
+        new URLSearchParams(window.location.search).get("q") ?? "";
+
+      input.value = searchTerm;
+      performSearch(searchTerm);
+    });
+
+    try {
+      const response = await fetch("/search-index.json");
+
+      if (!response.ok) {
+        throw new Error(
+          `Search index request failed with status ${response.status}`
+        );
+      }
+
+      const data: unknown = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("The search index did not return an article list.");
+      }
+
+      articles = data as SearchArticle[];
+      searchIndexLoaded = true;
+
+      status.hidden = true;
+      performSearch(initialQuery);
+    } catch (error) {
+      console.error(
+        "Unable to load the PTO Info Daily search index:",
+        error
+      );
+
+      status.hidden = false;
+      status.textContent =
+        "Search is temporarily unavailable. Please refresh the page and try again.";
+    }
+  }
+
+  void initialiseSearch();
+</script>
+
+<style>
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  :global(body) {
+    background: #f3f5f8;
+  }
+
+  .search-page {
+    width: min(100% - 40px, 960px);
+    min-height: 65vh;
+    margin: 0 auto;
+    padding: 52px 0 80px;
+  }
+
+  .search-heading {
+    padding-bottom: 28px;
+    border-bottom: 1px solid #e1e6ef;
+  }
+
+  .eyebrow {
+    margin: 0 0 12px;
+    color: #155eef;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: #102a56;
+  }
+
+  .search-heading h1 {
+    margin: 0 0 12px;
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: clamp(32px, 5vw, 46px);
+    line-height: 1.15;
+    letter-spacing: -1.3px;
+  }
+
+  .search-heading > p:last-child {
+    margin: 0;
+    color: #596579;
+    line-height: 1.7;
+  }
+
+  .search-form {
+    margin: 28px 0 38px;
+  }
+
+  .search-form label {
+    display: block;
+    margin-bottom: 10px;
+    color: #102a56;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .search-input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-input-row input {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid #cfd8e6;
+    border-radius: 2px;
+    background: #fff;
+    color: #172033;
+    font: inherit;
+  }
+
+  .search-input-row input:focus {
+    outline: 2px solid #155eef;
+    outline-offset: 1px;
+  }
+
+  .search-input-row button {
+    min-width: 100px;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 2px;
+    background: #155eef;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .search-input-row button:hover {
+    background: #102a56;
+  }
+
+  .results-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #102a56;
+  }
+
+  .results-heading h2 {
+    margin: 0;
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: 20px;
+  }
+
+  .results-heading span {
+    color: #687386;
+    font-size: 12px;
+  }
+
+  .search-status {
+    color: #596579;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .results-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .result-card {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 22px;
+    padding: 22px 0;
+    border-bottom: 1px solid #e1e6ef;
+  }
+
+  .result-image {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background: #eaf2ff;
+  }
+
+  .result-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .result-copy {
+    min-width: 0;
+  }
+
+  .category-label {
+    color: #155eef;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .result-copy h3 {
+    margin: 8px 0;
+    font-family: Montserrat, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.4;
+  }
+
+  .result-copy h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .result-copy h3 a:hover {
+    color: #155eef;
+  }
+
+  .result-copy > p {
+    margin: 0 0 14px;
+    color: #596579;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    color: #687386;
+    font-size: 11px;
+  }
+
+  .empty-state,
+  .category-explorer {
+    padding: 28px 0;
+  }
+
+  .empty-state h2,
+  .category-explorer h2 {
+    margin-top: 0;
+    font-family: Montserrat, Arial, sans-serif;
+  }
+
+  .empty-state p {
+    max-width: 620px;
+    color: #596579;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .empty-state > a {
+    display: inline-block;
+    margin-top: 8px;
+    color: #155eef;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .category-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .category-links a {
+    padding: 10px 13px;
+    border: 1px solid #dce4f0;
+    background: #fff;
+    color: #155eef;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .category-links a:hover {
+    border-color: #155eef;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (max-width: 600px) {
+    .search-page {
+      width: calc(100% - 32px);
+      padding: 36px 0 55px;
+    }
+
+    .search-input-row {
+      flex-direction: column;
+    }
+
+    .search-input-row button {
+      min-height: 46px;
+    }
+
+    .result-card {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .result-image {
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    .result-copy h3 {
+      font-size: 18px;
+    }
+  }
+</style>

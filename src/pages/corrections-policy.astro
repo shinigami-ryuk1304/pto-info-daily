@@ -1,0 +1,66 @@
+---
+import PolicyPage from "../components/PolicyPage.astro";
+import { SITE } from "../lib/site";
+---
+
+<PolicyPage
+  title="Corrections Policy"
+  path="/corrections-policy/"
+  description="How PTO Info Daily handles errors, corrections, clarifications and updates."
+  intro="We work hard to get things right. When we make a mistake, we fix it promptly and tell readers what changed."
+>
+  <h2>Our commitment</h2>
+  <p>
+    Accuracy matters to us and to our readers. When an error appears in
+    something we publish, we correct it as quickly as possible and are open
+    about having done so.
+  </p>
+
+  <h2>How to report an error</h2>
+  <p>
+    Email <a href={`mailto:${SITE.editorialEmail}?subject=Correction%20request`}>{SITE.editorialEmail}</a>{" "}
+    with the subject line "Correction request" and include:
+  </p>
+  <ul>
+    <li>the link to the story;</li>
+    <li>what you believe is wrong; and</li>
+    <li>any evidence or sources that support the correction.</li>
+  </ul>
+  <p>
+    We aim to acknowledge correction requests within two working days. An
+    editor reviews each request, and where necessary checks with the writer
+    and the original sources.
+  </p>
+
+  <h2>How we correct stories</h2>
+  <ul>
+    <li><strong>Corrections.</strong> When a story contains a factual error, we fix the error in the story and add a note explaining what was corrected and when.</li>
+    <li><strong>Clarifications.</strong> When a story is accurate but could be misunderstood, or left out important context, we add a clarification.</li>
+    <li><strong>Updates.</strong> When a developing story changes because new information becomes available, we update it and show that it has been updated.</li>
+    <li><strong>Minor fixes.</strong> Spelling, grammar and formatting mistakes that do not change the meaning of a story may be fixed without a note.</li>
+  </ul>
+
+  <h2>Removing stories</h2>
+  <p>
+    We do not normally remove published stories, because the public record
+    matters. We may unpublish or remove a story where it is seriously
+    inaccurate and cannot be corrected, where there is a legal requirement
+    to do so, or where keeping it online could put someone at risk. When
+    we remove a story for accuracy reasons, we explain this to readers.
+  </p>
+
+  <h2>Right of reply</h2>
+  <p>
+    If you are the subject of one of our stories and believe it is unfair or
+    inaccurate, contact us at{" "}
+    <a href={`mailto:${SITE.editorialEmail}`}>{SITE.editorialEmail}</a>.
+    We will consider your response and, where appropriate, add it to the
+    story or publish a correction.
+  </p>
+
+  <h2>Our editorial standards</h2>
+  <p>
+    Our approach to accuracy, fairness and review is set out in our{" "}
+    <a href="/editorial-policy/">Editorial Policy</a>.
+  </p>
+</PolicyPage>

@@ -1,0 +1,1464 @@
+
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { env } from 'cloudflare:workers';
+
+export const prerender = false;
+
+const session = Astro.session;
+
+if (!session) {
+  return Astro.redirect('/writers/login/', 303);
+}
+
+const authorId = await session.get('authorId');
+
+if (typeof authorId !== 'string' || !authorId) {
+  return Astro.redirect('/writers/login/', 303);
+}
+
+const db = env.DB;
+
+if (!db) {
+  throw new Error('Cloudflare D1 database binding is unavailable.');
+}
+
+const administrator = await db
+  .prepare(
+    `SELECT id, display_name, email, role, active
+     FROM authors
+     WHERE id = ?
+     LIMIT 1`,
+  )
+  .bind(authorId)
+  .first<{
+    id: string;
+    display_name: string;
+    email: string;
+    role: string;
+    active: number;
+  }>();
+
+if (
+  !administrator ||
+  administrator.active !== 1 ||
+  administrator.role !== 'admin'
+) {
+  await session.destroy();
+  return Astro.redirect('/writers/login/', 303);
+}
+
+const [
+  publishedResult,
+  draftResult,
+  writerResult,
+  suspendedResult,
+  recentResult,
+  writersResult,
+] = await Promise.all([
+  db
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM articles
+       WHERE status = 'published'`,
+    )
+    .first<{ total: number }>(),
+
+  db
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM articles
+       WHERE status = 'draft'`,
+    )
+    .first<{ total: number }>(),
+
+  db
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM authors
+       WHERE role = 'writer' AND active = 1`,
+    )
+    .first<{ total: number }>(),
+
+  db
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM authors
+       WHERE role = 'writer' AND active = 0`,
+    )
+    .first<{ total: number }>(),
+
+  db
+    .prepare(
+      `SELECT a.id, a.title, a.slug, a.category, a.status,
+              a.review_status, a.updated_at,
+              au.display_name AS author_name
+       FROM articles a
+       LEFT JOIN authors au ON au.id = a.author_id
+       -- Articles waiting for review first, then approved-but-unpublished,
+       -- then everything else by most recently updated.
+       ORDER BY
+         CASE
+           WHEN a.review_status = 'submitted' THEN 0
+           WHEN a.review_status = 'approved' AND a.status = 'draft' THEN 1
+           ELSE 2
+         END,
+         a.updated_at DESC
+       LIMIT 8`,
+    )
+    .all<{
+      id: string;
+      title: string;
+      slug: string;
+      category: string;
+      status: string;
+      review_status: string;
+      updated_at: string;
+      author_name: string | null;
+    }>(),
+
+  db
+    .prepare(
+      `SELECT
+         a.id,
+         a.display_name,
+         a.email,
+         a.active,
+         a.created_at,
+         CASE
+           WHEN a.password_hash IS NOT NULL THEN 'activated'
+           WHEN wi.used_at IS NOT NULL THEN 'used'
+           WHEN wi.expires_at > ? THEN 'pending'
+           WHEN wi.id IS NOT NULL THEN 'expired'
+           ELSE 'not-invited'
+         END AS invitation_status,
+         wi.expires_at
+       FROM authors a
+       LEFT JOIN writer_invitations wi
+         ON wi.author_id = a.id
+       WHERE a.role = 'writer'
+       ORDER BY a.created_at DESC`,
+    )
+    .bind(Math.floor(Date.now() / 1000))
+    .all<{
+      id: string;
+      display_name: string;
+      email: string;
+      active: number;
+      created_at: string;
+      invitation_status: string;
+      expires_at: number | null;
+    }>(),
+]);
+
+const publishedCount = publishedResult?.total ?? 0;
+const draftCount = draftResult?.total ?? 0;
+const activeWriters = writerResult?.total ?? 0;
+const suspendedWriters = suspendedResult?.total ?? 0;
+const recentArticles = recentResult.results ?? [];
+const writers = writersResult.results ?? [];
+
+const categoryNames: Record<string, string> = {
+  news: 'News',
+  politics: 'Politics',
+  entertainment: 'Entertainment',
+  'celebrity-news': 'Celebrity News',
+  trending: 'Trending Stories',
+  sports: 'Sports',
+  business: 'Business',
+  lifestyle: 'Lifestyle',
+  technology: 'Technology',
+};
+
+const reviewNames: Record<string, string> = {
+  draft: 'Draft',
+  submitted: 'Submitted',
+  changes_requested: 'Changes requested',
+  approved: 'Approved',
+};
+---
+
+<BaseLayout
+  title="Administrator Dashboard | PTO Info Daily"
+  description="Private administration dashboard for PTO Info Daily."
+  noIndex={true}
+>
+  <main class="admin-page">
+    <header class="admin-header">
+      <div class="header-inner">
+        <a href="/" class="brand" aria-label="PTO Info Daily homepage">
+          <img src="/pto-logo.png" alt="PTO Info Daily" />
+        </a>
+
+        <div class="header-account">
+          <span class="admin-label">ADMINISTRATOR</span>
+          <span class="account-name">{administrator.display_name}</span>
+
+          <form method="POST" action="/writers/logout/">
+            <button type="submit" class="logout-button">Sign out</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-container">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">PUBLICATION MANAGEMENT</p>
+          <h1>Administrator dashboard</h1>
+          <p class="subtitle">
+            Manage your publication, editorial team and articles from one place.
+          </p>
+        </div>
+
+        <span class="admin-badge">Full access</span>
+      </div>
+
+      <section class="stats-grid" aria-label="Publication overview">
+        <article class="stat-card">
+          <span class="stat-label">Published articles</span>
+          <strong>{publishedCount}</strong>
+          <span class="stat-foot">Currently published</span>
+        </article>
+
+        <article class="stat-card">
+          <span class="stat-label">Drafts</span>
+          <strong>{draftCount}</strong>
+          <span class="stat-foot">Awaiting publication</span>
+        </article>
+
+        <article class="stat-card">
+          <span class="stat-label">Active writers</span>
+          <strong>{activeWriters} / 3</strong>
+          <span class="stat-foot">Maximum writer accounts</span>
+        </article>
+
+        <article class="stat-card">
+          <span class="stat-label">Inactive writers</span>
+          <strong>{suspendedWriters}</strong>
+          <span class="stat-foot">Suspended or not activated</span>
+        </article>
+      </section>
+
+      <section class="management-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">EDITORIAL TEAM</p>
+            <h2>Writer management</h2>
+          </div>
+
+          <span class="section-count">{writers.length} of 3 accounts</span>
+        </div>
+
+        <div class="management-panel">
+          <div class="panel-copy">
+            <h3>Invite a writer</h3>
+            <p>
+              Create a writer account using their name and email address.
+              The writer will receive a one-time invitation link to set a password.
+              The link expires after 24 hours.
+            </p>
+
+            <form id="writer-form" class="writer-form">
+              <div class="form-field">
+                <label for="writer-name">Writer's full name</label>
+                <input
+                  id="writer-name"
+                  name="displayName"
+                  type="text"
+                  minlength="2"
+                  maxlength="100"
+                  autocomplete="name"
+                  placeholder="Enter writer's name"
+                  required
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="writer-email">Writer's email address</label>
+                <input
+                  id="writer-email"
+                  name="email"
+                  type="email"
+                  maxlength="254"
+                  autocomplete="email"
+                  placeholder="writer@example.com"
+                  required
+                />
+              </div>
+
+              <button
+                id="create-writer-button"
+                class="primary-button"
+                type="submit"
+                disabled={writers.length >= 3}
+              >
+                {writers.length >= 3 ? 'Writer limit reached' : 'Create writer invitation'}
+              </button>
+            </form>
+
+            <p id="writer-message" class="message" role="status" aria-live="polite"></p>
+
+            <div id="invitation-result" class="invitation-result" hidden>
+              <h3>Invitation created</h3>
+              <p>
+                Copy this link and send it privately to the writer. It will
+                only work once and expires in 24 hours.
+              </p>
+
+              <label for="invitation-url">One-time invitation link</label>
+              <div class="copy-row">
+                <input id="invitation-url" type="text" readonly />
+                <button id="copy-invitation-button" class="secondary-button" type="button">
+                  Copy link
+                </button>
+              </div>
+
+              <p id="invitation-expiry" class="expiry-text"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="writer-list">
+          <h3>Existing writer accounts</h3>
+
+          {writers.length > 0 ? (
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Writer</th>
+                    <th>Email</th>
+                    <th>Account status</th>
+                    <th>Invitation</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {writers.map((writer) => (
+                    <tr>
+                      <td>
+                        <strong>{writer.display_name}</strong>
+                        <span class="article-date">
+                          Added {writer.created_at}
+                        </span>
+                      </td>
+
+                      <td>{writer.email}</td>
+
+                      <td>
+                        <span class:list={[
+                          'status',
+                          writer.active === 1 ? 'status-published' : 'status-draft',
+                        ]}>
+                          {writer.active === 1 ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+
+                      <td>
+                        {writer.invitation_status === 'activated'
+                          ? 'Accepted'
+                          : writer.invitation_status === 'pending'
+                            ? `Pending — expires ${new Date(writer.expires_at! * 1000).toLocaleString()}`
+                            : writer.invitation_status === 'expired'
+                              ? 'Expired'
+                              : writer.invitation_status === 'used'
+                                ? 'Used'
+                                : 'Not invited'}
+                      </td>
+
+                      <td>
+                        <div class="writer-actions">
+                          <button
+                            type="button"
+                            class="action-button"
+                            data-writer-action={writer.active === 1 ? 'suspend' : 'reactivate'}
+                            data-writer-id={writer.id}
+                            data-writer-name={writer.display_name}
+                          >
+                            {writer.active === 1 ? 'Suspend' : 'Reactivate'}
+                          </button>
+
+                          <button
+                            type="button"
+                            class="action-button remove-button"
+                            data-writer-action="remove"
+                            data-writer-id={writer.id}
+                            data-writer-name={writer.display_name}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div class="empty-state">
+              <h3>No writer accounts yet</h3>
+              <p>Create your first writer invitation using the form above.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section class="management-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CONTENT OPERATIONS</p>
+            <h2>Recent articles</h2>
+          </div>
+
+          <span class="section-count">
+            {publishedCount + draftCount} total
+          </span>
+        </div>
+
+        {recentArticles.length > 0 ? (
+          <div class="table-wrap">
+            <table class="articles-table">
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th>Author</th>
+                  <th>Category</th>
+                  <th>Publication</th>
+                  <th>Editorial review</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {recentArticles.map((article) => (
+                  <tr>
+                    <td>
+                      <span class="article-title">{article.title}</span>
+                      <span class="article-date">
+                        Updated {article.updated_at}
+                      </span>
+                    </td>
+
+                    <td>{article.author_name ?? 'Unassigned'}</td>
+
+                    <td>
+                      {categoryNames[article.category] ?? article.category}
+                    </td>
+
+                    <td>
+                      <span class:list={[
+                        'status',
+                        article.status === 'published'
+                          ? 'status-published'
+                          : 'status-draft',
+                      ]}>
+                        {article.status === 'published' ? 'Published' : 'Draft'}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span class:list={[
+                        'status',
+                        article.review_status === 'approved'
+                          ? 'status-published'
+                          : article.review_status === 'submitted'
+                            ? 'status-submitted'
+                            : article.review_status === 'changes_requested'
+                              ? 'status-changes'
+                              : 'status-draft',
+                      ]}>
+                        {reviewNames[article.review_status] ?? 'Draft'}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div class="article-actions">
+                        <a
+                          class="action-button"
+                          href={`/writers/dashboard/?edit=${encodeURIComponent(article.id)}`}
+                        >
+                          Edit
+                        </a>
+
+                        {article.review_status === 'submitted' && (
+                          <>
+                            <button
+                              type="button"
+                              class="action-button approve-button"
+                              data-article-action="approve"
+                              data-article-id={article.id}
+                              data-article-title={article.title}
+                            >
+                              Approve
+                            </button>
+
+                            <button
+                              type="button"
+                              class="action-button changes-button"
+                              data-article-action="request_changes"
+                              data-article-id={article.id}
+                              data-article-title={article.title}
+                            >
+                              Request changes
+                            </button>
+                          </>
+                        )}
+
+                        {article.review_status === 'approved' &&
+                          article.status !== 'published' && (
+                            <>
+                              <button
+                                type="button"
+                                class="action-button publish-button"
+                                data-article-action="publish"
+                                data-article-id={article.id}
+                                data-article-title={article.title}
+                              >
+                                Publish
+                              </button>
+
+                              <button
+                                type="button"
+                                class="action-button changes-button"
+                                data-article-action="request_changes"
+                                data-article-id={article.id}
+                                data-article-title={article.title}
+                              >
+                                Request changes
+                              </button>
+                            </>
+                          )}
+
+                        {article.status === 'published' && (
+                          <button
+                            type="button"
+                            class="action-button changes-button"
+                            data-article-action="unpublish"
+                            data-article-id={article.id}
+                            data-article-title={article.title}
+                          >
+                            Unpublish
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          class="action-button remove-button"
+                          data-article-action="delete"
+                          data-article-id={article.id}
+                          data-article-title={article.title}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div class="empty-state">
+            <h3>No articles yet</h3>
+            <p>
+              Articles will appear here once they are created in the publishing
+              system.
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section class="account-section">
+        <p class="eyebrow">SIGNED-IN ACCOUNT</p>
+        <h2>Administrator details</h2>
+
+        <dl>
+          <div>
+            <dt>Display name</dt>
+            <dd>{administrator.display_name}</dd>
+          </div>
+
+          <div>
+            <dt>Email address</dt>
+            <dd>{administrator.email}</dd>
+          </div>
+
+          <div>
+            <dt>Role</dt>
+            <dd>Administrator</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    <footer class="admin-footer">
+      <span>© {new Date().getFullYear()} PTO Info Daily</span>
+      <a href="/">View public website</a>
+    </footer>
+  </main>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#writer-form');
+  const message = document.querySelector<HTMLElement>('#writer-message');
+  const createButton = document.querySelector<HTMLButtonElement>(
+    '#create-writer-button',
+  );
+  const resultPanel = document.querySelector<HTMLElement>('#invitation-result');
+  const invitationInput = document.querySelector<HTMLInputElement>('#invitation-url');
+  const expiryText = document.querySelector<HTMLElement>('#invitation-expiry');
+  const copyButton = document.querySelector<HTMLButtonElement>(
+    '#copy-invitation-button',
+  );
+
+  // Writer invitation creation
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (
+      !form ||
+      !message ||
+      !createButton ||
+      !resultPanel ||
+      !invitationInput ||
+      !expiryText
+    ) return;
+
+    message.textContent = '';
+    resultPanel.hidden = true;
+    createButton.disabled = true;
+    createButton.textContent = 'Creating invitation…';
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/api/admin/writers/', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          displayName: formData.get('displayName'),
+          email: formData.get('email'),
+        }),
+      });
+
+      const data: {
+        message?: string;
+        invitationUrl?: string;
+        expiresAt?: number;
+      } = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data.message === 'string'
+            ? data.message
+            : 'Unable to create the invitation.',
+        );
+      }
+
+      if (typeof data.invitationUrl !== 'string') {
+        throw new Error('The server did not return an invitation link.');
+      }
+
+      invitationInput.value = data.invitationUrl;
+
+      expiryText.textContent = data.expiresAt
+        ? `Expires: ${new Date(data.expiresAt * 1000).toLocaleString()}`
+        : 'The invitation expires in 24 hours.';
+
+      resultPanel.hidden = false;
+      message.textContent = data.message || 'Invitation created successfully.';
+      form.reset();
+
+      createButton.textContent = 'Invitation created';
+      createButton.disabled = true;
+    } catch (error) {
+      message.textContent =
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong. Please try again.';
+
+      createButton.disabled = false;
+      createButton.textContent = 'Create writer invitation';
+    }
+  });
+
+  // Copy writer invitation link
+  copyButton?.addEventListener('click', async () => {
+    if (!invitationInput || !copyButton) return;
+
+    try {
+      await navigator.clipboard.writeText(invitationInput.value);
+      copyButton.textContent = 'Copied';
+    } catch {
+      invitationInput.focus();
+      invitationInput.select();
+      copyButton.textContent = 'Select and copy';
+    }
+  });
+
+  // Suspend, reactivate and remove writer accounts
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-writer-action]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const action = button.dataset.writerAction;
+        const writerId = button.dataset.writerId;
+        const writerName = button.dataset.writerName || 'this writer';
+
+        if (!action || !writerId) return;
+
+        if (action === 'remove') {
+          const confirmed = window.confirm(
+            `Permanently remove ${writerName}?\n\nTheir articles will be transferred to the administrator before their account is deleted.`,
+          );
+
+          if (!confirmed) return;
+        }
+
+        if (action === 'suspend') {
+          const confirmed = window.confirm(
+            `Suspend ${writerName}'s account?\n\nThey will no longer be able to access the writers' portal.`,
+          );
+
+          if (!confirmed) return;
+        }
+
+        if (action === 'reactivate') {
+          const confirmed = window.confirm(
+            `Reactivate ${writerName}'s account?`,
+          );
+
+          if (!confirmed) return;
+        }
+
+        button.disabled = true;
+        const originalText = button.textContent;
+
+        button.textContent = 'Processing…';
+
+        try {
+          const response = await fetch(
+            `/api/admin/writers/${encodeURIComponent(writerId)}`,
+            {
+              method: action === 'remove' ? 'DELETE' : 'PATCH',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              ...(action === 'remove'
+                ? {}
+                : {
+                    body: JSON.stringify({ action }),
+                  }),
+            },
+          );
+
+          const data: { message?: string } = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data.message || 'The action could not be completed.',
+            );
+          }
+
+          window.alert(data.message || 'Writer account updated.');
+          window.location.reload();
+        } catch (error) {
+          window.alert(
+            error instanceof Error
+              ? error.message
+              : 'Something went wrong. Please try again.',
+          );
+
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      });
+    });
+
+  // Article management
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-article-action]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const action = button.dataset.articleAction;
+        const articleId = button.dataset.articleId;
+        const articleTitle = button.dataset.articleTitle || 'this article';
+
+        if (!action || !articleId) return;
+
+        const confirmations: Record<string, string> = {
+          approve: `Approve "${articleTitle}" for publication? This will not publish it automatically.`,
+          request_changes: `Return "${articleTitle}" to its writer for changes?`,
+          publish: `Publish "${articleTitle}" on the public website?`,
+          unpublish: `Unpublish "${articleTitle}" from the public website?`,
+          delete: `Permanently delete "${articleTitle}"? This cannot be undone.`,
+        };
+
+        const confirmation = confirmations[action];
+
+        if (!confirmation || !window.confirm(confirmation)) return;
+
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = 'Processing…';
+
+        try {
+          const isDelete = action === 'delete';
+
+          const response = await fetch(
+            `/api/articles/${encodeURIComponent(articleId)}`,
+            {
+              method: isDelete ? 'DELETE' : 'PATCH',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              ...(isDelete
+                ? {}
+                : {
+                    body: JSON.stringify({ action }),
+                  }),
+            },
+          );
+
+          const data: { message?: string } = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data.message || 'The article action could not be completed.',
+            );
+          }
+
+          window.alert(data.message || 'Article updated successfully.');
+          window.location.reload();
+        } catch (error) {
+          window.alert(
+            error instanceof Error
+              ? error.message
+              : 'Something went wrong. Please try again.',
+          );
+
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      });
+    });
+</script>
+
+<style>
+  .admin-page {
+    min-height: 75vh;
+    background: #f3f5f8;
+    color: #172033;
+  }
+
+  .admin-header {
+    background: #102a56;
+    color: #fff;
+  }
+
+  .header-inner {
+    max-width: 1240px;
+    min-height: 82px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .brand img {
+    display: block;
+    width: auto;
+    max-width: 175px;
+    max-height: 58px;
+    object-fit: contain;
+  }
+
+  .header-account {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .admin-label {
+    padding: 5px 8px;
+    border: 1px solid #60769a;
+    border-radius: 3px;
+    color: #e2eaff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .account-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .header-account form {
+    margin: 0;
+  }
+
+  .logout-button {
+    padding: 8px 12px;
+    border: 1px solid #b9c9e5;
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .logout-button:hover {
+    background: #1a3b70;
+  }
+
+  .admin-container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 38px 24px 60px;
+  }
+
+  .page-heading,
+  .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .page-heading {
+    margin-bottom: 30px;
+  }
+
+  .eyebrow {
+    margin: 0 0 8px;
+    color: #155eef;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+  }
+
+  h1, h2, h3, p {
+    overflow-wrap: anywhere;
+  }
+
+  h1 {
+    margin: 0;
+    color: #102a56;
+    font-size: clamp(26px, 4vw, 34px);
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    margin: 10px 0 0;
+    color: #667085;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .admin-badge {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    border: 1px solid #c8d8f8;
+    border-radius: 4px;
+    background: #eaf2ff;
+    color: #1746a2;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card,
+  .management-panel,
+  .writer-list,
+  .empty-state,
+  .table-wrap,
+  .account-section {
+    min-width: 0;
+    border: 1px solid #e0e5ed;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .stat-card {
+    padding: 22px;
+  }
+
+  .stat-label, .stat-foot {
+    display: block;
+    color: #667085;
+    font-size: 13px;
+  }
+
+  .stat-card strong {
+    display: block;
+    margin: 15px 0 8px;
+    color: #102a56;
+    font-size: 32px;
+    line-height: 1.1;
+  }
+
+  .management-section {
+    margin-top: 38px;
+  }
+
+  .section-heading {
+    margin-bottom: 16px;
+  }
+
+  .section-heading h2, .account-section h2 {
+    margin: 0;
+    color: #102a56;
+    font-size: 22px;
+  }
+
+  .section-count {
+    color: #667085;
+    font-size: 13px;
+  }
+
+  .management-panel {
+    padding: 24px;
+  }
+
+  .panel-copy h3, .writer-list h3 {
+    margin: 0 0 8px;
+    color: #102a56;
+    font-size: 18px;
+  }
+
+  .panel-copy > p {
+    max-width: 760px;
+    margin: 0 0 20px;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .writer-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    max-width: 850px;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-field label,
+  .invitation-result label {
+    color: #344054;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .form-field input,
+  .copy-row input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #cfd6e2;
+    border-radius: 4px;
+    background: #fff;
+    color: #172033;
+    font: inherit;
+    font-size: 14px;
+  }
+
+  .form-field input:focus,
+  .copy-row input:focus {
+    outline: 2px solid #9bbcff;
+    outline-offset: 1px;
+  }
+
+  .primary-button, .secondary-button {
+    padding: 11px 16px;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .primary-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+    border: 1px solid #155eef;
+    background: #155eef;
+    color: #fff;
+  }
+
+  .primary-button:hover:not(:disabled) {
+    background: #104bc5;
+  }
+
+  .primary-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .secondary-button {
+    flex-shrink: 0;
+    border: 1px solid #c8d8f8;
+    background: #eaf2ff;
+    color: #1746a2;
+  }
+
+  .message {
+    margin: 16px 0 0;
+    color: #1746a2;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .invitation-result {
+    max-width: 850px;
+    margin-top: 20px;
+    padding: 18px;
+    border: 1px solid #c8d8f8;
+    border-radius: 5px;
+    background: #f5f8ff;
+  }
+
+  .invitation-result[hidden] {
+    display: none;
+  }
+
+  .invitation-result h3 {
+    margin: 0 0 8px;
+    color: #102a56;
+  }
+
+  .invitation-result p {
+    color: #596579;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .copy-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .expiry-text {
+    margin-bottom: 0;
+  }
+
+  .writer-list {
+    margin-top: 18px;
+    padding: 24px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th, td {
+    padding: 15px 18px;
+    border-bottom: 1px solid #edf0f4;
+    vertical-align: top;
+    font-size: 13px;
+  }
+
+  th {
+    background: #fafbfc;
+    color: #596579;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .article-title, .article-date {
+    display: block;
+  }
+
+  .article-title {
+    min-width: 170px;
+    color: #172033;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .article-date {
+    margin-top: 5px;
+    color: #667085;
+    font-size: 11px;
+  }
+
+  .status {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .status-published {
+    background: #eaf2ff;
+    color: #1746a2;
+  }
+
+  .status-draft {
+    background: #f0f1f3;
+    color: #596579;
+  }
+
+  .status-submitted {
+    background: #fff7e6;
+    color: #93370d;
+  }
+
+  .status-changes {
+    background: #fff1f0;
+    color: #b42318;
+  }
+
+  /* Writer account actions */
+  .writer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 150px;
+  }
+
+  .action-button {
+    display: inline-block;
+    padding: 7px 10px;
+    border: 1px solid #c8d8f8;
+    border-radius: 4px;
+    background: #eaf2ff;
+    color: #1746a2;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .action-button:hover {
+    background: #dce9ff;
+  }
+
+  .remove-button {
+    border-color: #f1c6c2;
+    background: #fff1f0;
+    color: #b42318;
+  }
+
+  .remove-button:hover {
+    background: #fee4e2;
+  }
+
+  .action-button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  /* Article management actions */
+  .articles-table {
+    min-width: 900px;
+  }
+
+  .article-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-width: 190px;
+  }
+
+  .approve-button,
+  .publish-button {
+    border-color: #a6dfc0;
+    background: #ecfdf3;
+    color: #067647;
+  }
+
+  .approve-button:hover,
+  .publish-button:hover {
+    background: #d1fadf;
+  }
+
+  .changes-button {
+    border-color: #f5d49a;
+    background: #fffaeb;
+    color: #93370d;
+  }
+
+  .changes-button:hover {
+    background: #fef0c7;
+  }
+
+  .empty-state {
+    padding: 30px 24px;
+  }
+
+  .empty-state h3 {
+    margin: 0 0 8px;
+    color: #102a56;
+    font-size: 17px;
+  }
+
+  .empty-state p {
+    margin: 0;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .account-section {
+    margin-top: 38px;
+    padding: 24px;
+  }
+
+  .account-section dl {
+    margin: 20px 0 0;
+  }
+
+  .account-section dl div {
+    display: grid;
+    grid-template-columns: minmax(120px, 180px) 1fr;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid #edf0f4;
+  }
+
+  .account-section dt {
+    color: #667085;
+    font-size: 13px;
+  }
+
+  .account-section dd {
+    margin: 0;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    border-top: 1px solid #e0e5ed;
+    background: #fff;
+    color: #667085;
+    font-size: 12px;
+  }
+
+  .admin-footer a {
+    color: #155eef;
+    text-decoration: none;
+  }
+
+  .admin-footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 900px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .header-inner {
+      align-items: flex-start;
+      padding: 16px;
+    }
+
+    .brand img {
+      max-width: 125px;
+    }
+
+    .header-account {
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .account-name {
+      max-width: 145px;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+
+    .admin-container {
+      padding: 28px 16px 42px;
+    }
+
+    .page-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .stats-grid {
+      gap: 10px;
+    }
+
+    .stat-card {
+      padding: 16px;
+    }
+
+    .stat-card strong {
+      font-size: 27px;
+    }
+
+    .management-panel, .writer-list, .account-section {
+      padding: 18px;
+    }
+
+    .writer-form {
+      grid-template-columns: 1fr;
+    }
+
+    .copy-row {
+      flex-direction: column;
+    }
+
+    .account-section dl div {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .admin-footer {
+      flex-direction: column;
+      padding: 18px 16px;
+    }
+  }
+</style>

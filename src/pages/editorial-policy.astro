@@ -1,0 +1,85 @@
+---
+import PolicyPage from "../components/PolicyPage.astro";
+import { SITE } from "../lib/site";
+---
+
+<PolicyPage
+  title="Editorial Policy"
+  path="/editorial-policy/"
+  description="How PTO Info Daily reports, checks, reviews and publishes the news."
+  intro="The standards our writers and editors follow when we report, check, review and publish stories on PTO Info Daily."
+>
+  <h2>Our purpose</h2>
+  <p>
+    {SITE.name} reports news, politics, entertainment, business, sports,
+    lifestyle and technology stories from Nigeria and beyond. Our aim is to
+    give readers information they can trust, presented clearly and fairly.
+  </p>
+
+  <h2>Accuracy</h2>
+  <ul>
+    <li>We check facts before we publish. Where possible, important claims are confirmed with more than one reliable source.</li>
+    <li>We attribute information to its source, and we say clearly when something has not been independently confirmed.</li>
+    <li>We do not knowingly publish false or misleading information, doctored images or invented quotes.</li>
+    <li>When we get something wrong, we correct it openly. See our <a href="/corrections-policy/">Corrections Policy</a>.</li>
+  </ul>
+
+  <h2>Fairness and balance</h2>
+  <ul>
+    <li>We aim to represent different sides of a story fairly, especially on political and contested issues.</li>
+    <li>Where a story makes a serious allegation against a person or organisation, we make a reasonable effort to give them an opportunity to respond.</li>
+    <li>We keep news reporting separate from opinion. Opinion and commentary are labelled as such.</li>
+  </ul>
+
+  <h2>Independence and conflicts of interest</h2>
+  <ul>
+    <li>Editorial decisions are made by our editors, not by advertisers, sponsors, political parties or other outside interests.</li>
+    <li>Writers must tell an editor about any personal, financial or political interest connected to a story they are working on. Where a conflict cannot be managed, another writer handles the story.</li>
+    <li>Sponsored or paid content is clearly labelled and kept separate from our news reporting. See <a href="/sponsorship/">Sponsor PTO Info Daily</a>.</li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ul>
+    <li>We prefer named, on-the-record sources.</li>
+    <li>We use anonymous sources only when the information is important, cannot reasonably be obtained another way, and the source has good reason for anonymity. An editor must know who the source is.</li>
+    <li>We protect the confidentiality of sources we have agreed not to name.</li>
+  </ul>
+
+  <h2>Editorial review before publication</h2>
+  <p>Every story on {SITE.name} goes through the same review process:</p>
+  <ul>
+    <li>A writer drafts the story and submits it for review.</li>
+    <li>An editor reviews it for accuracy, fairness, clarity, legal risk and our standards, and either approves it or returns it to the writer with requested changes.</li>
+    <li>Only approved stories can be published, and publication is a separate decision made by an editor.</li>
+  </ul>
+
+  <h2>Images and copyright</h2>
+  <ul>
+    <li>We only publish images we have the right to use, and we credit photographers and sources where possible.</li>
+    <li>We do not alter news photographs in ways that mislead readers. Illustrations and edited images are labelled.</li>
+    <li>We respect the copyright of others and quote only what is needed to report the story.</li>
+  </ul>
+
+  <h2>Privacy, harm and sensitive stories</h2>
+  <ul>
+    <li>We respect people's privacy and only intrude where there is a clear public interest.</li>
+    <li>We take particular care when reporting on children, victims of crime, people in grief and people in vulnerable situations.</li>
+    <li>We avoid needlessly graphic content and do not identify victims of sexual offences.</li>
+    <li>We avoid language that promotes hatred or discrimination on the basis of ethnicity, religion, gender, disability or any other characteristic.</li>
+  </ul>
+
+  <h2>Political coverage</h2>
+  <p>
+    We cover elections, governments, parties and candidates with the same
+    standards of accuracy and fairness, whoever they are. We do not endorse
+    candidates or parties in our news reporting.
+  </p>
+
+  <h2>Feedback and complaints</h2>
+  <p>
+    If you believe a story breaches these standards, please contact our
+    editors at <a href={`mailto:${SITE.editorialEmail}`}>{SITE.editorialEmail}</a>{" "}
+    with a link to the story and an explanation of your concern. We review
+    every complaint we receive.
+  </p>
+</PolicyPage>

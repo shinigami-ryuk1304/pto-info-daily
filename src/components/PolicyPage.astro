@@ -1,0 +1,251 @@
+---
+// Shared layout for the "Our Standards" pages.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteHeader from "./SiteHeader.astro";
+import SiteFooter from "./SiteFooter.astro";
+import { SITE, STANDARDS_PAGES } from "../lib/site";
+
+interface Props {
+  title: string;
+  path: string; // e.g. "/privacy/"
+  description: string;
+  intro: string;
+}
+
+const { title, path, description, intro } = Astro.props;
+---
+
+<BaseLayout
+  title={`${title} | ${SITE.name}`}
+  description={description}
+  canonicalUrl={`${SITE.url}${path}`}
+>
+  <SiteHeader />
+
+  <main class="policy-page">
+    <header class="policy-hero">
+      <div class="policy-wrap">
+        <p class="eyebrow"><span aria-hidden="true"></span> OUR STANDARDS</p>
+        <h1>{title}</h1>
+        <p class="intro">{intro}</p>
+        <p class="updated">Last updated: {SITE.policiesUpdated}</p>
+      </div>
+    </header>
+
+    <div class="policy-wrap policy-layout">
+      <article class="policy-body">
+        <slot />
+
+        <section class="policy-contact" aria-labelledby="contact-heading">
+          <h2 id="contact-heading">Contact us</h2>
+          <p>
+            Questions about this policy can be sent to{" "}
+            <a href={`mailto:${SITE.editorialEmail}`}>{SITE.editorialEmail}</a>.{" "}
+            {SITE.name} is based in {SITE.location}.
+          </p>
+        </section>
+      </article>
+
+      <aside class="policy-nav" aria-label="Our Standards">
+        <p class="nav-title">OUR STANDARDS</p>
+        <ul>
+          {STANDARDS_PAGES.map((page) => (
+            <li>
+              <a href={page.href} aria-current={page.href === path ? "page" : undefined}>
+                {page.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a class="home-link" href="/">
+          <span aria-hidden="true">←</span> Back to homepage
+        </a>
+      </aside>
+    </div>
+  </main>
+
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .policy-page {
+    background: #ffffff;
+    color: #172033;
+    font-family: "Inter", Arial, sans-serif;
+  }
+
+  .policy-wrap {
+    width: min(1100px, calc(100% - 40px));
+    margin-inline: auto;
+  }
+
+  .policy-hero {
+    padding: 64px 0 44px;
+    background: #f5f7fb;
+    border-bottom: 1px solid #e5eaf2;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    color: #102a56;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+
+  .eyebrow span {
+    width: 26px;
+    height: 3px;
+    background: #155eef;
+  }
+
+  h1 {
+    margin: 0 0 18px;
+    color: #102a56;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: clamp(2.1rem, 5vw, 3.4rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+  }
+
+  .intro {
+    max-width: 720px;
+    margin: 0;
+    color: #586174;
+    font-size: clamp(1rem, 2vw, 1.12rem);
+    line-height: 1.8;
+  }
+
+  .updated {
+    margin: 18px 0 0;
+    color: #7b8596;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .policy-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 56px;
+    padding: 48px 0 88px;
+  }
+
+  .policy-body {
+    max-width: 760px;
+    color: #293449;
+    font-size: 1.02rem;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+  }
+
+  .policy-body :global(h2) {
+    margin: 2.2em 0 0.6em;
+    color: #172033;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-weight: 750;
+    line-height: 1.35;
+  }
+
+  .policy-body :global(h2:first-child) { margin-top: 0; }
+
+  .policy-body :global(p) { margin: 0 0 1.1em; }
+
+  .policy-body :global(ul) {
+    margin: 0 0 1.3em;
+    padding-left: 1.4em;
+  }
+
+  .policy-body :global(li) { margin-bottom: 0.5em; }
+
+  .policy-body :global(a) {
+    color: #155eef;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .policy-body :global(a:hover) { color: #102a56; }
+
+  .policy-body :global(strong) { color: #172033; }
+
+  .policy-contact {
+    margin-top: 2.4em;
+    padding: 22px 24px;
+    border-left: 3px solid #155eef;
+    background: #f3f6fb;
+  }
+
+  .policy-contact h2 { margin-top: 0 !important; }
+  .policy-contact p { margin: 0 !important; }
+
+  .policy-nav {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding: 22px;
+    border: 1px solid #e5eaf2;
+    background: #f7f9fc;
+  }
+
+  .nav-title {
+    margin: 0 0 12px;
+    color: #102a56;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .policy-nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .policy-nav li a {
+    display: block;
+    padding: 9px 0;
+    border-bottom: 1px solid #e5eaf2;
+    color: #536079;
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .policy-nav li a:hover { color: #155eef; }
+
+  .policy-nav li a[aria-current="page"] {
+    color: #155eef;
+    font-weight: 700;
+  }
+
+  .home-link {
+    display: inline-flex;
+    gap: 8px;
+    margin-top: 18px;
+    color: #596579;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .home-link:hover { color: #155eef; }
+
+  @media (max-width: 860px) {
+    .policy-layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 36px;
+      padding: 36px 0 64px;
+    }
+
+    .policy-nav { position: static; }
+  }
+
+  @media (max-width: 600px) {
+    .policy-wrap { width: calc(100% - 32px); }
+    .policy-hero { padding: 44px 0 32px; }
+    .policy-body { font-size: 0.98rem; }
+  }
+</style>

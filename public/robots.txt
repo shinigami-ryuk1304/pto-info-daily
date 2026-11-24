@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /writers/
+Disallow: /api/
+
+Sitemap: https://ptoinfodaily.com/sitemap.xml
